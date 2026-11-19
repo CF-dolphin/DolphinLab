@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dolphin Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+:root{
+  --page:#e6e2d6; --page-ink:#33323c; --muted:#66646f;
+  --shell:#d6d1c1; --shell-edge:#b1aa96; --shell-ink:#4a4956;
+  --bezel:#555766; --bezel-ink:#c6c7d3;
+  --btn:#8e2a55; --btn-edge:#581833; --btn-ink:#f6eaf0;
+  --dpad:#2b2b33; --dpad-ink:#8a8a9c;
+  --pill:#8a8796;
+  --gb0:#0f380f; --gb1:#306230; --gb2:#8bac0f; --gb3:#9bbc0f;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --page:#15161b; --page-ink:#e5e4ec; --muted:#9897a6;
+    --shell:#3a3b46; --shell-edge:#24252d; --shell-ink:#cfcfdc;
+    --bezel:#24252c; --bezel-ink:#8f90a3;
+    --btn:#a33466; --btn-edge:#621d3d; --btn-ink:#fcf0f6;
+    --dpad:#111116; --dpad-ink:#6b6b80;
+    --pill:#5c5b69;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --page:#15161b; --page-ink:#e5e4ec; --muted:#9897a6;
+  --shell:#3a3b46; --shell-edge:#24252d; --shell-ink:#cfcfdc;
+  --bezel:#24252c; --bezel-ink:#8f90a3;
+  --btn:#a33466; --btn-edge:#621d3d; --btn-ink:#fcf0f6;
+  --dpad:#111116; --dpad-ink:#6b6b80;
+  --pill:#5c5b69;
+  color-scheme:dark;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--page);color:var(--page-ink);
+  font-family:"VT323",ui-monospace,Menlo,Consolas,monospace;-webkit-tap-highlight-color:transparent}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none !important}
+.pix{font-family:"Press Start 2P",ui-monospace,Menlo,Consolas,monospace}
+
+.wrap{max-width:520px;margin:0 auto;padding:16px 12px 20px}
+.device{position:relative;background:var(--shell);border-radius:16px 16px 60px 16px;padding:18px 18px 30px;
+  box-shadow:inset 0 -6px 0 var(--shell-edge),inset 0 2px 0 rgba(255,255,255,.25),0 10px 28px rgba(0,0,0,.18)}
+.bezel{background:var(--bezel);border-radius:10px 10px 36px 10px;padding:10px 14px 20px;max-width:100%}
+.btop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.brand{font-family:"Press Start 2P",ui-monospace,monospace;font-size:10px;color:var(--bezel-ink);letter-spacing:1px}
+.hud{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-family:"Press Start 2P",ui-monospace,monospace;font-size:8px;line-height:1;padding:4px 5px;color:var(--bezel-ink);border:2px solid var(--bezel-ink);border-radius:2px}
+.chip.now{background:var(--gb2);color:var(--gb0);border-color:var(--gb2)}
+.chip.done{background:var(--gb1);color:var(--gb3);border-color:var(--gb1)}
+.chip.star{border-color:transparent;color:var(--gb2)}
+
+.screen{position:relative;width:100%;aspect-ratio:10/9;background:var(--gb3);overflow:hidden;container-type:inline-size;
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.25)}
+#game{display:block;width:100%;height:100%;image-rendering:crisp-edges;image-rendering:pixelated}
+
+/* title */
+.titlecard{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
+  background:var(--gb3);background:color-mix(in srgb,var(--gb3) 84%,transparent);color:var(--gb0);cursor:pointer;padding:6%}
+.titlecard.hide{display:none}
+.logo{font-family:"Press Start 2P",ui-monospace,monospace;font-size:30px;font-size:clamp(22px,9cqw,46px);line-height:1.15;text-shadow:4px 4px 0 var(--gb2);margin:0}
+.tsub{font-size:22px;font-size:clamp(18px,5.6cqw,28px);margin:.35em 0 .5em}
+.tsk{font-family:"Press Start 2P",ui-monospace,monospace;font-size:10px;font-size:clamp(8px,2.4cqw,12px);color:var(--gb1);margin-bottom:1.6em;word-spacing:.6em}
+.blink{font-family:"Press Start 2P",ui-monospace,monospace;font-size:11px;font-size:clamp(9px,2.8cqw,14px);animation:blink 1s steps(2,start) infinite}
+.tkeys{margin-top:1.3em;font-size:17px;font-size:clamp(15px,4.2cqw,20px);color:var(--gb1);line-height:1.1}
+@keyframes blink{to{visibility:hidden}}
+
+/* overlay */
+.ov{position:absolute;inset:0;display:none;color:var(--gb0)}
+.ov.show{display:block}
+.say{position:absolute;left:3%;right:3%;bottom:3%;min-height:31%;background:var(--gb3);border:4px solid var(--gb0);
+  box-shadow:inset 0 0 0 3px var(--gb2);padding:16px 12px 12px;font-size:21px;font-size:clamp(17px,5cqw,26px);line-height:1.08;cursor:pointer}
+.who{position:absolute;top:-14px;left:10px;background:var(--gb0);color:var(--gb3);font-family:"Press Start 2P",ui-monospace,monospace;
+  font-size:9px;font-size:clamp(8px,2.3cqw,11px);padding:6px 7px}
+.more{position:absolute;right:10px;bottom:4px;opacity:0}
+.say.done .more{opacity:1;animation:bob .7s steps(2,start) infinite}
+@keyframes bob{50%{transform:translateY(3px)}}
+
+.panel{position:absolute;inset:0;background:var(--gb3);overflow:auto;border:4px solid var(--gb0);
+  padding:10px 12px 14px;font-size:19px;font-size:clamp(16px,4.5cqw,23px);line-height:1.1;
+  scrollbar-width:thin;scrollbar-color:var(--gb1) var(--gb2)}
+.panel p{margin:.4em 0}
+.panel h3{font-family:"Press Start 2P",ui-monospace,monospace;font-size:10px;font-size:clamp(9px,2.5cqw,12px);line-height:1.5;margin:.5em 0 .2em}
+.ptag{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-family:"Press Start 2P",ui-monospace,monospace;
+  font-size:9px;font-size:clamp(8px,2.2cqw,11px);line-height:1.4;margin-bottom:8px}
+.ptag .sk{background:var(--gb0);color:var(--gb3);padding:4px 6px}
+.ptag .row{color:var(--gb1)}
+.ptag .qn{margin-left:auto;color:var(--gb1)}
+.prompt{font-size:1.05em}
+.opt{display:flex;gap:6px;align-items:flex-start;width:100%;text-align:left;font:inherit;color:var(--gb0);background:var(--gb3);
+  border:3px solid var(--gb0);padding:3px 8px 4px;margin:0 0 7px;cursor:pointer;line-height:1.05;box-shadow:3px 3px 0 var(--gb1)}
+.opt .cur{visibility:hidden;flex:none}
+.opt.sel{background:var(--gb2)}
+.opt.sel .cur{visibility:visible}
+.opt:focus{outline:none}
+.opt:focus-visible{outline:3px dashed var(--gb0);outline-offset:3px}
+.opt.wrong{opacity:.5;text-decoration:line-through;box-shadow:none;cursor:default;background:var(--gb3)}
+.opt.wrong .cur{visibility:hidden}
+.opt.right{background:var(--gb1);color:var(--gb3)}
+.fb{display:none;margin:8px 0;padding:5px 8px;border:3px dashed var(--gb1)}
+.fb.ok,.fb.no{display:block}
+.fb.ok{border-style:solid;border-color:var(--gb0);background:var(--gb2)}
+.cont,.alt{font-family:"Press Start 2P",ui-monospace,monospace;font-size:10px;font-size:clamp(9px,2.4cqw,12px);line-height:1.3;
+  background:var(--gb0);color:var(--gb3);border:3px solid var(--gb0);padding:10px 12px;cursor:pointer;box-shadow:3px 3px 0 var(--gb1)}
+.alt{background:var(--gb3);color:var(--gb0)}
+.cont:focus,.alt:focus{outline:none}
+.cont:focus-visible,.alt:focus-visible{outline:3px dashed var(--gb0);outline-offset:3px}
+.btnrow{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:10px}
+.graph{display:block;width:100%;max-width:440px;height:auto;margin:0 auto 8px;border:3px solid var(--gb0);
+  image-rendering:crisp-edges;image-rendering:pixelated}
+.ref{border:3px solid var(--gb1);margin:6px 0;padding:3px 8px}
+.ref summary{cursor:pointer;font-family:"Press Start 2P",ui-monospace,monospace;font-size:9px;font-size:clamp(8px,2.2cqw,11px);line-height:1.6;color:var(--gb1)}
+.ref summary:focus-visible{outline:3px dashed var(--gb0)}
+.dt{border-collapse:collapse;width:100%;margin:6px 0}
+.dt th,.dt td{border:2px solid var(--gb0);padding:2px 6px;text-align:center}
+.dt th{background:var(--gb1);color:var(--gb3);font-weight:normal}
+.small{font-size:.9em;color:var(--gb1)}
+.proc{margin:6px 0;padding:6px 8px 6px 30px;background:var(--gb2);border:3px solid var(--gb0)}
+.proc li{margin:2px 0}
+.lead{margin:4px 0 0}
+.art{border-left:4px solid var(--gb1);padding-left:10px;margin:8px 0}
+.src{font-size:.9em;color:var(--gb1)}
+.model{background:var(--gb2);border:3px solid var(--gb0);padding:6px 10px}
+.rep{border-top:3px solid var(--gb0);margin-top:10px;padding-top:2px}
+.rep ul{list-style:none;padding:0;margin:4px 0}
+.rep li{padding:1px 0}
+.tip{color:var(--gb1)}
+.big{font-family:"Press Start 2P",ui-monospace,monospace;font-size:12px;font-size:clamp(10px,3cqw,15px);line-height:1.5}
+.banner{position:absolute;top:5%;left:50%;transform:translateX(-50%);background:var(--gb0);color:var(--gb3);
+  font-family:"Press Start 2P",ui-monospace,monospace;font-size:11px;font-size:clamp(9px,2.8cqw,14px);padding:10px 14px;
+  display:flex;gap:16px;white-space:nowrap;border:3px solid var(--gb2)}
+
+/* controls */
+.ctrl{margin-top:22px;user-select:none;-webkit-user-select:none;touch-action:none}
+.controls{display:flex;justify-content:space-between;align-items:center;padding:0 4px}
+.dpad{position:relative;width:114px;height:114px;flex:none}
+.dpad button,.dpad .mid{position:absolute;width:38px;height:38px;background:var(--dpad);border:none;padding:0;color:var(--dpad-ink);font-size:13px;line-height:38px}
+.dpad button{cursor:pointer}
+.dpad .up{left:38px;top:0;border-radius:4px 4px 0 0}
+.dpad .dn{left:38px;top:76px;border-radius:0 0 4px 4px}
+.dpad .lf{left:0;top:38px;border-radius:4px 0 0 4px}
+.dpad .rt{left:76px;top:38px;border-radius:0 4px 4px 0}
+.dpad .mid{left:38px;top:38px}
+.dpad button.on{filter:brightness(1.8)}
+.ab{display:flex;gap:16px;transform:rotate(-22deg);margin-right:4px}
+.abw,.pw{display:flex;flex-direction:column;align-items:center;gap:7px}
+.btn{width:56px;height:56px;border-radius:50%;background:var(--btn);color:var(--btn-ink);border:none;box-shadow:0 4px 0 var(--btn-edge);
+  font-family:"Press Start 2P",ui-monospace,monospace;font-size:13px;cursor:pointer}
+.btn.on{transform:translateY(3px);box-shadow:0 1px 0 var(--btn-edge)}
+.abw span,.pw span{font-family:"Press Start 2P",ui-monospace,monospace;font-size:8px;color:var(--shell-ink)}
+.pills{display:flex;justify-content:center;gap:28px;margin-top:20px}
+.pw{transform:rotate(-22deg)}
+.pill{width:48px;height:12px;border-radius:8px;background:var(--pill);border:none;cursor:pointer}
+.pill.on{filter:brightness(1.4)}
+.grille{position:absolute;right:26px;bottom:22px;display:flex;gap:7px;transform:rotate(-30deg)}
+.grille i{display:block;width:5px;height:38px;border-radius:3px;background:var(--shell-edge)}
+.help{text-align:center;color:var(--muted);font-size:18px;margin:14px 6px 0;line-height:1.15}
+
+/* rewards */
+.pearl{display:inline-block;width:.85em;height:.85em;border-radius:50%;vertical-align:-.12em;border:2px solid var(--gb0);
+  background:radial-gradient(circle at 35% 35%,var(--gb3) 0 30%,var(--gb2) 34% 100%)}
+.chip.pearls{border-color:transparent;color:var(--gb2);display:inline-flex;align-items:center;gap:4px}
+.chip.pearls .pearl{border-color:var(--gb2)}
+.chip.bump{animation:bump .5s steps(4,end)}
+@keyframes bump{40%{transform:scale(1.5)}}
+.pop{position:absolute;left:50%;top:20%;z-index:5;pointer-events:none;background:var(--gb0);color:var(--gb3);
+  font-family:"Press Start 2P",ui-monospace,monospace;font-size:14px;font-size:clamp(11px,3.2cqw,18px);padding:10px 14px;border:3px solid var(--gb2);
+  display:flex;align-items:center;gap:8px;white-space:nowrap;transform:translateX(-50%);animation:popup 1.3s steps(10,end) forwards}
+.pop .pearl{border-color:var(--gb2)}
+@keyframes popup{0%{opacity:0;transform:translate(-50%,20px) scale(.6)}15%{opacity:1;transform:translate(-50%,0) scale(1.1)}25%{transform:translate(-50%,0) scale(1)}75%{opacity:1;transform:translate(-50%,-14px)}100%{opacity:0;transform:translate(-50%,-34px)}}
+.earn{display:inline-flex;align-items:center;gap:4px;margin-left:6px;font-weight:bold}
+.award{text-align:center}
+.award .big{font-size:16px;font-size:clamp(12px,3.6cqw,20px);margin-top:.4em}
+.award .aname{font-family:"Press Start 2P",ui-monospace,monospace;font-size:13px;font-size:clamp(10px,3cqw,16px);line-height:1.5;margin:.3em 0}
+.awardart{position:relative;width:min(40%,180px);margin:6px auto 8px}
+.awardart canvas{display:block;width:100%;height:auto;image-rendering:crisp-edges;image-rendering:pixelated;animation:grow .7s steps(7,end)}
+@keyframes grow{0%{transform:scale(.2) rotate(-12deg)}70%{transform:scale(1.12) rotate(3deg)}100%{transform:scale(1) rotate(0)}}
+.spark{position:absolute;width:10px;height:10px;background:var(--gb0);transform:rotate(45deg);animation:twinkle 1.2s steps(3,end) infinite}
+.spark.s1{left:-8%;top:12%}.spark.s2{right:-6%;top:4%;animation-delay:.4s}.spark.s3{right:-10%;top:55%;animation-delay:.8s}.spark.s4{left:-4%;top:72%;animation-delay:.6s}
+@keyframes twinkle{0%,100%{opacity:0;transform:rotate(45deg) scale(.3)}50%{opacity:1;transform:rotate(45deg) scale(1)}}
+.award .btnrow{justify-content:center}
+.badgerow{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+.badgerow canvas{width:56px;height:auto;image-rendering:crisp-edges;image-rendering:pixelated}
+@media (prefers-reduced-motion:reduce){.pop,.awardart canvas,.spark,.chip.bump{animation:none}.pop{display:none}}
+@media (min-width:820px){
+  .wrap{max-width:1500px;padding:12px 16px}
+  .device{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:20px;align-items:center;border-radius:16px 60px 16px 16px;padding:14px 16px 18px}
+  .bezel{padding:8px 12px 14px;border-radius:10px 10px 28px 10px}
+  .btop{margin-bottom:6px}
+  .screen{aspect-ratio:auto;height:max(440px, calc(100vh - 110px));background:var(--gb2)}
+  #game{width:auto;height:100%;aspect-ratio:10/9;margin:0 auto;box-shadow:0 0 0 3px var(--gb0)}
+  .say{left:max(3%, calc(50% - 440px));right:max(3%, calc(50% - 440px))}
+  .panel{padding:14px max(16px, calc((100% - 1000px) / 2)) 18px}
+  .qwrap.side{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:22px;align-items:start}
+  .qwrap.side .qside{position:sticky;top:0}
+  .qwrap.side .graph{max-width:100%}
+  .qwrap.side .lead{margin-top:0}
+  .ctrl{margin-top:0;display:flex;flex-direction:column;align-items:center;gap:26px}
+  .controls{flex-direction:column;gap:26px}
+  .pills{margin-top:0}
+  .grille,.help{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .blink,.say.done .more{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="device">
+    <div class="bezel">
+      <div class="btop">
+        <span class="brand">DOLPHIN LAB</span>
+        <div class="hud" id="hud" aria-label="Progress"></div>
+      </div>
+      <div class="screen" id="screen">
+        <canvas id="game" width="160" height="144" aria-label="The lab. Walk your scientist to each station."></canvas>
+        <div class="titlecard" id="title">
+          <div>
+            <p class="logo">DOLPHIN<br>LAB</p>
+            <p class="tsub">Pick an experiment. Think like a scientist.</p>
+            <p class="tsk">IS DQ EA RC</p>
+            <p class="blink">PRESS A TO START</p>
+            <p class="tkeys">Arrows or WASD to walk<br>Space or Enter for A, X for B</p>
+          </div>
+        </div>
+        <div class="ov" id="ov"></div>
+      </div>
+    </div>
+    <div class="ctrl">
+      <div class="controls">
+        <div class="dpad" aria-label="Direction pad">
+          <button class="up" data-dir="up" tabindex="-1" aria-label="Up">▲</button>
+          <button class="lf" data-dir="left" tabindex="-1" aria-label="Left">◀</button>
+          <div class="mid"></div>
+          <button class="rt" data-dir="right" tabindex="-1" aria-label="Right">▶</button>
+          <button class="dn" data-dir="down" tabindex="-1" aria-label="Down">▼</button>
+        </div>
+        <div class="ab">
+          <div class="abw"><button class="btn" data-btn="B" tabindex="-1" aria-label="B button, hint">B</button><span>HINT</span></div>
+          <div class="abw"><button class="btn" data-btn="A" tabindex="-1" aria-label="A button, talk and choose">A</button><span>TALK</span></div>
+        </div>
+      </div>
+      <div class="pills">
+        <div class="pw"><button class="pill" data-btn="SOUND" tabindex="-1" aria-label="Toggle sound"></button><span id="sndlbl">SOUND ON</span></div>
+        <div class="pw"><button class="pill" data-btn="START" tabindex="-1" aria-label="Start or show controls"></button><span>START</span></div>
+      </div>
+    </div>
+    <div class="grille" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+  </div>
+  <p class="help">Keyboard: arrows or WASD to walk, Space or Enter for A, X for B (hint). You can also click or tap the answers.</p>
+</div>
+
+<script>(function(){
+'use strict';
+
+/* ---------- palette + tiny bitmap font ---------- */
+const C=['#0f380f','#306230','#8bac0f','#9bbc0f'];
+const FONT={A:'010101111101101',B:'110101110101110',C:'011100100100011',D:'110101101101110',E:'111100110100111',F:'111100110100100',
+G:'011100101101011',H:'101101111101101',I:'111010010010111',J:'001001001101010',K:'101101110101101',L:'100100100100111',
+M:'101111111101101',N:'110101101101101',O:'010101101101010',P:'110101110100100',Q:'010101101110011',R:'110101110101101',
+S:'011100010001110',T:'111010010010010',U:'101101101101111',V:'101101101101010',W:'101101111111101',X:'101101010101101',
+Y:'101101010010010',Z:'111001010100111','0':'111101101101111','1':'010110010010111','2':'110001010100111','3':'110001010001110',
+'4':'101101111001001','5':'111100110001110','6':'011100110101010','7':'111001010010010','8':'010101010101010','9':'010101011001110',
+'.':'000000000000010',':':'000010000010000','(':'001010010010001',')':'100010010010100','/':'001001010100100','-':'000000111000000',
+'!':'010010010000010',',':'000000000010100','?':'110001010000010',' ':'000000000000000','°':'010101010000000'};
+function txt(g,s,x,y,col,rot){
+  g.fillStyle=col; s=String(s).toUpperCase();
+  for(let i=0;i<s.length;i++){
+    const f=FONT[s[i]]; if(!f) continue;
+    for(let p=0;p<15;p++){
+      if(f.charCodeAt(p)!==49) continue;
+      const cx=p%3, cy=(p/3)|0;
+      if(rot) g.fillRect(x+cy,y-(i*4+cx),1,1); else g.fillRect(x+i*4+cx,y+cy,1,1);
+    }
+  }
+}
+function tw(s){return String(s).length*4-1;}
+
+/* ---------- canvas ---------- */
+const cv=document.getElementById('game'); const ctx=cv.getContext('2d');
+function R(x,y,w,h,c){ctx.fillStyle=C[c];ctx.fillRect(x,y,w,h);}
+function box(x,y,w,h,f,o){R(x,y,w,h,o);R(x+1,y+1,w-2,h-2,f);}
+
+const BODY=[
+"................",
+".....000000.....",
+"....01111110....",
+"...0111111110...",
+"...0122222210...",
+"...0333333330...",
+"...0303333030...",
+"...0233333320...",
+"....03311330....",
+".....000000.....",
+"...0331001330...",
+"..033310013330..",
+"..033310013330..",
+"..023333333320.."];
+const LEGS={
+  stand:["....010..010....","...0000..0000..."],
+  b:["....010..000....","...0000........."],
+  c:["....000..010....",".........0000..."]};
+function drawRows(rows,x,y){
+  for(let r=0;r<rows.length;r++){const row=rows[r];
+    for(let i=0;i<row.length;i++){const ch=row[i]; if(ch==='.') continue; ctx.fillStyle=C[+ch]; ctx.fillRect(x+i,y+r,1,1);}}
+}
+
+/* ---------- game state ---------- */
+const S={mode:'title',inv:'music',px:72,py:66,walkT:0,moving:false,stage:0,growth:0,results:{},t:0,sound:true,gen:0,cut:null,pearls:0,streak:0,spStart:0,
+  graph:{axes:false,x:false,y:false,scale:false,trend:false,title:false}};
+const held={up:false,down:false,left:false,right:false};
+const ORDER=['IS','DQ','EA','RC'];
+const PLACES={IS:'top left',DQ:'top right',EA:'bottom left',RC:'bottom right'};
+const SKN={IS:'Investigation Skills',DQ:'Data Analysis & Quantitative Reasoning',EA:'Evidence-based Argumentation',RC:'Research & Communication'};
+const THINGS=[
+  {id:'IS',r:{x:8,y:30,w:34,h:17}},
+  {id:'DQ',r:{x:110,y:30,w:42,h:17}},
+  {id:'EA',r:{x:7,y:104,w:36,h:30}},
+  {id:'RC',r:{x:118,y:98,w:36,h:40}},
+  {id:'SPROUT',r:{x:67,y:36,w:18,h:11}},
+  {id:'PROP',r:{x:94,y:34,w:10,h:12}}];
+const TAGS={IS:{x:25,y:36,ay:12},DQ:{x:131,y:36,ay:4},EA:{x:25,y:94,ay:84},RC:{x:136,y:87,ay:77}};
+
+/* ====================================================================
+   CONTENT: two investigations
+   ==================================================================== */
+const proc=(lead,items)=>`<p class="lead">${lead}</p><ol class="proc">${items.map(i=>`<li>${i}</li>`).join('')}</ol>`;
+const INV={};
+
+/* ---------- Investigation 1: music and plants ---------- */
+INV.music={
+  key:'music', pick:`Does music help plants grow?`,
+  intro:`Today’s question: does music help plants grow? Let’s find out like real scientists.`,
+  names:{IS:'Planning Desk',DQ:'Plant Bench',EA:'Whiteboard',RC:'Bookshelf'},
+  days:21,
+  data:[[0,4.2],[2,4.8],[4,5.1],[6,5.7],[8,6.0]],
+  dataHead:['Hours of music per day (hours/day)','Average height change (cm)'],
+  dataNote:`Each average comes from 10 plants per group, across 3 trials.`,
+  fmt:v=>v.toFixed(1),
+  graph:{PL:26,xMax:10,xStep:2,yMax:7,yStep:1,fit:1,xLabel:'HOURS OF MUSIC PER DAY (HOURS/DAY)',yLabel:'AVERAGE HEIGHT CHANGE (CM)',
+    title:['FIG. 1: EFFECT OF HOURS OF MUSIC PER DAY','ON AVERAGE HEIGHT CHANGE OF BEAN PLANTS']},
+  propText:[`A speaker. Hmm, I wonder what we’ll use this for.`,`The speaker plays music for the plants at 60 dB, the same volume for every group. Volume is a controlled variable!`],
+  science:[`Before the reasoning, some background science. Sound is a vibration that travels through the air.`,
+    `Scientists have found that plants can sense vibrations, using cells that respond to being touched or moved.`],
+  rcIntro:`Other scientists have studied how plants respond to sound. Read these two articles carefully. You can re-read them during every question.`,
+  note:`A note from Finn: the data in this experiment was invented for the game. Real studies on music and plant growth have mixed results, which is exactly why scientists keep testing. The two articles are simplified summaries of real studies.`,
+  art1:`<article class="art"><h3>Plants Can Sense a Hungry Caterpillar</h3>
+<p class="src">Adapted from research by Heidi Appel and Rex Cocroft, University of Missouri (2014)</p>
+<p>When a caterpillar chews on a leaf, it makes tiny vibrations that travel through the plant. Researchers wondered whether plants could detect these vibrations. They recorded the vibrations of caterpillars eating thale cress, a small plant related to mustard. Then they played the recording through the leaves of some plants, while other plants sat in silence.</p>
+<p>Later, real caterpillars were allowed to feed on all of the plants. The plants that had felt the chewing vibrations earlier made more mustard oils, chemicals that taste bad to caterpillars. Plants did not react this way to vibrations from wind or from insect sounds that weren’t chewing. This suggests plants can tell different vibrations apart and use them to prepare for danger.</p></article>`,
+  art2:`<article class="art"><h3>Pea Roots Follow the Sound of Water</h3>
+<p class="src">Adapted from research led by Monica Gagliano, University of Western Australia (2017)</p>
+<p>Plant roots need to find water, but soil is dark and crowded. Researchers wondered whether roots might use sound to help. They grew pea plants in pots shaped like an upside-down Y, so the roots had to choose between two directions. Next to one side, water flowed through a sealed pipe. The water could not leak into the soil, so the roots could not feel any moisture, only the vibrations of the moving water.</p>
+<p>The roots grew toward the side with the flowing water. However, when the soil itself had a wet side, roots followed the moisture instead of the sound. This suggests that sound may help roots find water when other clues are missing.</p></article>`,
+  model:`<p>Here’s what a strong synthesis paragraph could look like:</p>
+<p class="model">Both studies show that plants can sense vibrations around them and respond in ways that help them survive. When thale cress plants sensed recorded caterpillar chewing, they later made more chemicals to defend themselves, but vibrations from wind did not have the same effect. Pea roots showed a similar skill by growing toward the sound of water moving through a sealed pipe, even though no moisture reached them. Whether a vibration signals danger or something a plant needs, plants seem to use vibrations as information about their surroundings. This research suggests one possible reason music could affect how plants grow.</p>
+<p>It opens with the idea that links both studies, includes the key finding from each, skips the rabbit holes, weaves the articles together, and every sentence is in new words.</p>`,
+  Q:{
+IS:[
+ {id:'is1',row:'Question',p:`First, a scientific question. Which one is clear and testable, with a specific IV and DV?`,a:2,o:[
+  [`Do plants like music?`,`We can’t measure whether a plant “likes” something. A testable question is about something we can measure.`],
+  [`What is the effect of music on plants?`,`Closer! But what about the music changes, and what do we measure on the plants? Both variables need to be specific.`],
+  [`How does the number of hours of music played per day affect the height growth of bean plants?`,`The IV (hours of music per day) and the DV (height growth) are both specific and measurable.`],
+  [`Which song do plants grow best to?`,`There’s no clear, measurable variable here, and testing every song ever written would take a while.`]]},
+ {id:'is2',row:'Variables: IV',p:`What is the independent variable, the one YOU change on purpose?`,a:1,o:[
+  [`The speaker`,`That’s an object, not a variable. A variable is something that can change and be measured.`],
+  [`Hours of music played per day (hours/day)`,`It’s specific, it matches the question, and it has units.`],
+  [`Change in plant height (cm)`,`That’s what you measure to see the effect, so it’s the dependent variable.`],
+  [`Music`,`Too vague. What about the music are you changing: the volume, the song, the hours? Be specific.`]]},
+ {id:'is3',row:'Variables: DV',p:`Which dependent variable is specific and measurable?`,a:3,o:[
+  [`How healthy the plants look`,`“Healthy-looking” depends on who’s looking. Pick something you can measure with a tool.`],
+  [`The bean plants`,`That’s an object again! What about the plants are you measuring?`],
+  [`Hours of music per day (hours/day)`,`That’s the IV, the variable you change.`],
+  [`Change in plant height over 21 days (cm)`,`You can measure it with a ruler, and it has units.`]]},
+ {id:'is4',row:'Variables: CVs',p:`Which list shows controlled variables that NEED to be controlled, with amounts?`,a:0,o:[
+  [`Plant type (bean), water (50 mL every 2 days), light (12 hours/day), music volume (60 dB)`,`Each of these could affect growth, and each has an amount. Keeping the volume the same means only the hours of music change.`],
+  [`Type of plant, color of the pots, day of the week`,`Pot color and the day of the week probably won’t affect growth. Controlled variables are things that could change your results if they weren’t kept the same.`],
+  [`Water, sunlight, soil`,`Good variables, but no amounts. How much water? How many hours of light?`],
+  [`Hours of music, plant height, amount of water`,`The first two are your IV and DV. You can’t control the variables you’re testing!`]]},
+ {id:'is5',row:'Hypothesis',p:`Which hypothesis is strongest? Remember the frame: As the IV ___, the DV ___ because ___.`,a:3,o:[
+  [`Music will make the plants grow.`,`This doesn’t describe how the variables are related, and there’s no “because.”`],
+  [`As the hours of music per day increase, the plants will grow taller.`,`Good relationship! But a hypothesis also explains WHY. Where’s your “because”?`],
+  [`As the volume of the music increases, the plants will grow taller because the vibrations are stronger.`,`Careful! Your question is about hours of music, not volume. The hypothesis has to match your question.`],
+  [`As the hours of music per day increase, the height growth of the plants will increase because plants can sense sound vibrations, which may trigger growth.`,`It matches the question, describes the relationship, and gives a reason.`]]},
+ {id:'is6',row:'Procedure: sample size',pre:proc(`Your draft procedure:`,[`Set up 5 groups of 2 bean plants each.`,`Play music for 0, 2, 4, 6, or 8 hours per day at 60 dB.`,`Give every plant 50 mL of water every 2 days and 12 hours of light per day.`,`Measure each plant’s height in cm on Day 1 and Day 21.`]),
+  p:`What’s the problem with step 1?`,a:1,o:[
+  [`There should be fewer groups.`,`Five groups gives you five data points for your graph. That part is fine.`],
+  [`2 plants per group is too small. One weird plant could throw off the results, so use more, like 10 per group.`,`A large sample size makes your results more reliable.`],
+  [`The plants should all be different types.`,`Plant type is a controlled variable. It should stay the same.`],
+  [`Nothing, it looks great!`,`Look closer at the number of plants in each group.`]]},
+ {id:'is7',row:'Procedure: repeated trials',pre:proc(`Your updated procedure:`,[`Set up 5 groups of 10 bean plants each.`,`Play music for 0, 2, 4, 6, or 8 hours per day at 60 dB.`,`Give every plant 50 mL of water every 2 days and 12 hours of light per day.`,`Measure each plant’s height in cm on Day 1 and Day 21.`]),
+  p:`Which of the 5 procedure elements is still missing?`,a:2,o:[
+  [`How the IV will be manipulated`,`Step 2 already does that: 0, 2, 4, 6, or 8 hours per day.`],
+  [`How the DV will be measured`,`Step 4 covers that: height in cm on Day 1 and Day 21.`],
+  [`Repeated trials`,`Running the whole experiment 3 times shows whether your results happen again or were just luck.`],
+  [`How the CVs will be controlled`,`Step 3 handles that: the same water and light for every plant.`]]}
+],
+DQ:[
+ {id:'dq1',row:'Graph Type',fx:'axes',p:`Which type of graph fits this data best?`,a:2,o:[
+  [`Bar graph`,`Bar graphs work best when the IV is in categories, like rock vs. jazz. Your IV is a number that changes smoothly.`],
+  [`Pie chart`,`Pie charts show parts of a whole. Your data shows how one variable changes with another.`],
+  [`Scatter plot with a line of best fit`,`Both variables are numbers, and a line of best fit will show the trend.`],
+  [`Pictograph with little plant drawings`,`Cute, but not precise enough for science data.`]]},
+ {id:'dq2',row:'Axes & Units: x-axis',fx:'x',p:`Which variable goes on the x-axis?`,a:3,o:[
+  [`Average height change (cm)`,`That’s your DV. The DV goes on the y-axis.`],
+  [`Trial number`,`You averaged the trials together, so trial number doesn’t get an axis.`],
+  [`Plant type`,`Plant type was a controlled variable. It stayed the same, so it doesn’t get an axis.`],
+  [`Hours of music per day (hours/day)`,`The independent variable always goes on the x-axis, with its units in parentheses.`]]},
+ {id:'dq3',row:'Axes & Units: y-axis label',fx:'y',p:`Pick the best y-axis label.`,a:1,o:[
+  [`Height`,`Which height? And in what units? Labels need detail and units.`],
+  [`Average height change (cm)`,`A clear label with units in parentheses.`],
+  [`Average height change`,`Good detail, but where are the units?`],
+  [`cm`,`Units alone don’t tell the reader what was measured.`]]},
+ {id:'dq4',row:'Scale',fx:'scale',p:`Your data goes from 4.2 to 6.0 cm. Which y-axis scale is best?`,a:1,o:[
+  [`0, 2, 5, 6, 10`,`The jumps aren’t equal (2, 3, 1, 4). Uneven spacing makes the trend look different than it really is.`],
+  [`0, 1, 2, 3, 4, 5, 6, 7`,`Equal increments that fit your data. Now the points can go on!`],
+  [`4.2, 4.8, 5.1, 5.7, 6.0`,`Those are just your data values! The axis needs equal, consistent increments.`],
+  [`0, 10, 20, 30, 40`,`The increments are equal, but your data would be squished into the bottom of the graph.`]]},
+ {id:'dq5',row:'Trendline',fx:'trend',p:`Which line of best fit is accurate?`,a:2,o:[
+  [`A zigzag line that connects every point, dot to dot`,`A line of best fit doesn’t have to touch every point. It shows the overall trend.`],
+  [`A line from (0, 0) to the last point`,`Your data doesn’t start at zero, so forcing the line through (0, 0) misrepresents it.`],
+  [`A straight line through the middle of the points, with about as many points above it as below it`,`That’s a line of best fit.`],
+  [`A flat line at the average height`,`A flat line says the DV doesn’t change. Your data clearly goes up.`]]},
+ {id:'dq6',row:'Title: wording',p:`Choose the best title.`,a:0,o:[
+  [`Fig. 1: Effect of Hours of Music per Day on Average Height Change of Bean Plants`,`It starts with “Fig. 1” and names both the IV and the DV.`],
+  [`Fig. 1: Plants and Music`,`Too general. A strong title names both variables.`],
+  [`Effect of Hours of Music per Day on Average Height Change of Bean Plants`,`Great detail, but it’s missing “Fig. 1” at the start.`],
+  [`Fig. 1: My Awesome Graph`,`It IS awesome. But the title needs to name both variables.`]]},
+ {id:'dq7',row:'Title: placement',fx:'title',p:`Last step! Where does the title go?`,a:1,o:[
+  [`Above the graph`,`That’s common in newspapers, but in science reports, figure titles go underneath.`],
+  [`Underneath the graph`,`Scientific figures put the title below. Your graph is complete!`],
+  [`On the y-axis`,`The axis already has its label. The title gets its own spot.`],
+  [`Anywhere, as long as it’s big`,`Scientists follow conventions so every reader knows where to look.`]]}
+],
+EA:[
+ {id:'ea1',row:'Claim',p:`Which claim is best? It should answer the question and describe the relationship between the variables.`,a:2,o:[
+  [`Music is good for plants.`,`Too general. Which variable changed, and how did the plants respond?`],
+  [`Plants with 8 hours of music per day grew 6.0 cm.`,`That’s a piece of evidence, not a claim. A claim answers the whole question.`],
+  [`As the hours of music per day increased, the average height change of the bean plants increased.`,`It answers the question and describes the relationship between the IV and the DV.`],
+  [`As the hours of music increased, the plants grew more because they enjoyed it.`,`The first part is good, but the claim shouldn’t include reasoning, and “enjoyed it” isn’t scientific.`]]},
+ {id:'ea2',row:'Evidence: specific data',p:`Which evidence is specific and includes units?`,a:3,o:[
+  [`The plants that got more music grew more.`,`No numbers! Evidence needs specific data.`],
+  [`Plants with 8 hours of music grew 6.0.`,`6.0 what? And one data point isn’t enough to show a pattern.`],
+  [`I could see that the plants on the right side of the bench looked bigger.`,`Observations are a start, but measured data is much stronger.`],
+  [`Plants with 0 hours of music per day grew an average of 4.2 cm, while plants with 8 hours per day grew 6.0 cm. Average growth increased at every step in between.`,`Specific, with units, and it shows the whole pattern.`]]},
+ {id:'ea3',row:'Evidence: sufficient',p:`Which detail makes your evidence more convincing?`,a:0,o:[
+  [`Each average came from 10 plants per group, and the experiment was repeated 3 times.`,`A large sample and repeated trials make it hard to argue your results were luck.`],
+  [`The speaker was really expensive.`,`The price of the speaker doesn’t make the data more reliable.`],
+  [`The plants were a nice shade of green.`,`Nice, but not evidence about growth.`],
+  [`You really wanted it to work.`,`Scientists try hard NOT to let what they want affect their results!`]]},
+ {id:'ea4',row:'Reasoning',p:`Which reasoning best explains WHY the data counts as evidence for the claim?`,a:1,o:[
+  [`The data shows that the plants grew more with more music, so the claim is correct.`,`This just repeats the evidence. Reasoning needs a science concept that explains the pattern.`],
+  [`Sound is a vibration, and plants have cells that can sense vibrations. More hours of music means more vibrations for the plants to sense, which may trigger a growth response. This explains why growth increased as hours of music increased.`,`It uses a science concept to connect the IV to the DV.`],
+  [`Plants grow because of photosynthesis.`,`True! But it doesn’t connect to music. Reasoning links your IV to your DV.`],
+  [`Music makes plants happy, and happy plants grow more.`,`Plants don’t have feelings like we do. Reasoning has to use accepted science.`]]}
+],
+RC:[
+ {id:'rc1',row:'Synthesis: topic sentence',p:`A strong summary opens with a topic sentence about the big idea that links BOTH articles. Which is best?`,a:1,o:[
+  [`Caterpillars can be very harmful to plants.`,`This only covers Article 1, and it misses the main idea about sensing vibrations.`],
+  [`Both studies show that plants can sense vibrations around them and respond in ways that help them survive.`,`This names the idea that unifies both articles.`],
+  [`This paragraph is about two articles on plants.`,`This announces the topic but doesn’t say anything about it. A topic sentence makes a point.`],
+  [`Pea plants are able to find water using their roots.`,`That’s only Article 2. The topic sentence should connect both.`]]},
+ {id:'rc2',row:'Breadth',p:`Breadth means including all the important points. Which set must your summary include?`,a:2,o:[
+  [`The caterpillar study took place at the University of Missouri, and the pea pots were shaped like a Y.`,`True, but these are small details, not the main findings.`],
+  [`Caterpillars eat leaves, and roots need water.`,`Too general. These don’t describe what the researchers discovered.`],
+  [`Plants that felt chewing vibrations made more defense chemicals, and pea roots grew toward the sound of flowing water.`,`These are the key findings of each study.`],
+  [`Only the caterpillar study, because it came first.`,`A synthesis needs the important points from BOTH articles.`]]},
+ {id:'rc3',row:'Depth: rabbit holes',p:`Depth means not too general and not too specific. Which detail is a “rabbit hole,” too minor for a short summary?`,a:2,o:[
+  [`Plants made more mustard oils after sensing chewing vibrations.`,`That’s a key finding. Keep it!`],
+  [`Roots grew toward the sound of water even though no moisture reached them.`,`That’s the main result of Article 2. Keep it!`],
+  [`Thale cress is related to mustard.`,`Interesting, but it doesn’t help explain the big idea. Leave it out.`],
+  [`Plants didn’t react the same way to wind vibrations.`,`This one is useful. It shows plants can tell different vibrations apart.`]]},
+ {id:'rc4',row:'Depth: level of detail',p:`Which sentence has the right depth for a summary?`,a:3,o:[
+  [`Plants can do lots of interesting things with sound.`,`Too general. This could describe almost any article about plants.`],
+  [`The researchers recorded caterpillar vibrations, played them through the leaves of some thale cress plants, kept other plants in silence, and then let real caterpillars feed on all of them.`,`Accurate, but that’s the whole method! A short summary focuses on what was found.`],
+  [`Article 1 is about caterpillars.`,`Too general, and it describes the article instead of the findings.`],
+  [`When plants sensed recorded caterpillar chewing, they later made more chemicals to defend themselves.`,`Specific enough to mean something, short enough for a summary.`]]},
+ {id:'rc5',row:'Synthesis: weaving',p:`Which sentence weaves the two articles together instead of summarizing them one at a time?`,a:2,o:[
+  [`In the first article, plants sensed caterpillars. In the second article, roots found water.`,`This summarizes one article, then the other. Look for a sentence that connects them.`],
+  [`The second article was more interesting than the first.`,`That’s an opinion, not a connection between the findings.`],
+  [`Whether a vibration signals danger, like a chewing caterpillar, or something a plant needs, like flowing water, plants seem to use vibrations as information about their surroundings.`,`One sentence, both articles, one big idea.`],
+  [`Pea roots grew toward the sound of flowing water.`,`That’s only Article 2.`]]},
+ {id:'rc6',row:'Synthesis: own words',p:`Article 1 says: “The plants that had felt the chewing vibrations earlier made more mustard oils, chemicals that taste bad to caterpillars.” Which version is fully in your own words?`,a:0,o:[
+  [`After sensing chewing earlier, the plants defended themselves better, producing extra bad-tasting chemicals when caterpillars actually showed up.`,`Same idea, completely new wording.`],
+  [`The plants that had felt the chewing vibrations made more mustard oils.`,`This copies long strings of words from the article. Changing a word or two isn’t paraphrasing.`],
+  [`Plants that felt the chewing vibrations earlier made more chemicals.`,`Still copied: “felt the chewing vibrations earlier” comes straight from the article.`],
+  [`“The plants that had felt the chewing vibrations earlier made more mustard oils.”`,`Quotation marks give credit, but a summary should be in your own words.`]]}
+]}};
+
+/* ---------- Investigation 2: water temperature and plankton ---------- */
+INV.plankton={
+  key:'plankton', pick:`How does water temperature affect plankton?`,
+  intro:`Today’s question: how does water temperature affect plankton? We’re growing L. polyedra, the tiny dinoflagellate that makes Southern California waves glow blue!`,
+  names:{IS:'Planning Desk',DQ:'Culture Bench',EA:'Whiteboard',RC:'Bookshelf'},
+  days:7,
+  data:[[10,1100],[15,2900],[20,4600],[25,4200],[30,2300],[35,200]],
+  dataHead:['Water temperature (°C)','Cell count after 7 days (cells/mL)'],
+  dataNote:`Each count is an average of 5 flasks per temperature, across 3 trials. Every flask started with 500 cells/mL.`,
+  fmt:v=>v.toLocaleString('en-US'),
+  graph:{PL:30,xMax:40,xStep:5,yMax:5000,yStep:1000,fit:2,xLabel:'WATER TEMPERATURE (°C)',yLabel:'CELL COUNT (CELLS/ML)',
+    title:['FIG. 1: EFFECT OF WATER TEMPERATURE ON','DINOFLAGELLATE CELL COUNT AFTER 7 DAYS']},
+  propText:[`An incubator with six water baths. I wonder what we’ll use these for.`,`The incubator holds six water baths: 10, 15, 20, 25, 30, and 35 °C. Each group of flasks gets its own temperature.`],
+  science:[`Before the reasoning, some background science. Inside every cell, enzymes speed up the chemical reactions that let the cell grow and divide.`,
+    `Enzymes work faster as the temperature rises, but only up to a point. When it gets too hot, they start to lose their shape and stop working.`],
+  rcIntro:`Other scientists have studied how ocean temperature affects plankton in the real ocean. Read these two articles carefully. You can re-read them during every question.`,
+  note:`A note from Finn: the data in this experiment was invented for the game, but the rise, peak, and fall is the same pattern real phytoplankton show. The two articles are simplified summaries of real studies.`,
+  art1:`<article class="art"><h3>Every Plankton Has a Favorite Temperature</h3>
+<p class="src">Adapted from research by Mridul Thomas, Colin Kremer, Christopher Klausmeier, and Elena Litchman, Michigan State University (2012)</p>
+<p>Phytoplankton are tiny ocean organisms that make food from sunlight, and they feed almost everything else in the sea. Researchers gathered lab measurements for 194 kinds of phytoplankton collected from all over the world, from icy polar water to warm tropical seas. For each one, they found its optimum temperature, the temperature where it grew fastest. Growth went up as the water warmed, peaked at the optimum, and then dropped.</p>
+<p>Each kind of phytoplankton had an optimum close to the average temperature of the ocean where it came from. Tropical kinds were already living close to their limit, so even a little warming could push them past their best temperature. Using computer models, the researchers predicted that as oceans warm this century, many kinds will shift toward the poles, and tropical oceans could lose much of their phytoplankton variety.</p></article>`,
+  art2:`<article class="art"><h3>A Warm-Water Blob and a Toxic Bloom</h3>
+<p class="src">Adapted from research led by Ryan McCabe, University of Washington and NOAA (2016)</p>
+<p>In 2013, a huge patch of unusually warm water formed in the northeast Pacific Ocean and lasted through 2015. Scientists nicknamed it “the Blob.” Its surface water was more than 2.5 °C warmer than normal. In spring 2015, a diatom called Pseudo-nitzschia australis spread farther north than it normally lives and formed a giant bloom along the West Coast.</p>
+<p>This diatom can make domoic acid, a toxin that builds up in shellfish and crabs. The 2015 bloom caused the largest outbreak of this toxin ever recorded on the coast. Sea lions got sick, and fisheries for razor clams and Dungeness crab were shut down. In lab experiments, cells from the bloom divided two to three times faster when they were given warmer temperatures and more nutrients. The Blob was not caused by climate change, but scientists see it as a preview of what a warmer ocean could bring.</p></article>`,
+  model:`<p>Here’s what a strong synthesis paragraph could look like:</p>
+<p class="model">Both studies show that temperature controls how well plankton grow, so a change in ocean temperature can change which plankton thrive and where. When scientists compared 194 kinds of phytoplankton from around the world, each grew fastest near the average temperature of its home waters, and tropical kinds were already close to their limit. That pattern helps explain 2015, when an unusually warm patch of the Pacific let a toxic diatom spread beyond its usual range and bloom along the West Coast, sickening sea lions and closing crab and clam fisheries. Together, the studies suggest that as oceans warm, the plankton at the base of the food web may shift in ways that reach all the way to people.</p>
+<p>It opens with the idea that links both studies, includes the key finding from each, skips the rabbit holes, weaves the articles together, and every sentence is in new words.</p>`,
+  Q:{
+IS:[
+ {id:'is1',row:'Question',p:`First, a scientific question. Which one is clear and testable, with a specific IV and DV?`,a:2,o:[
+  [`Do plankton like warm water?`,`We can’t measure whether plankton “like” something. A testable question is about something we can measure.`],
+  [`How does water temperature affect the presence of plankton?`,`Close! But “presence” is just yes or no. If you count how MANY cells there are, you get numbers you can graph.`],
+  [`How does water temperature affect the number of dinoflagellate cells per mL after 7 days?`,`The IV (water temperature) and the DV (cells per mL) are both specific and measurable.`],
+  [`What is the best temperature for the ocean?`,`There’s no measurable variable here, and the ocean has lots of different temperatures for good reasons.`]]},
+ {id:'is2',row:'Variables: IV',p:`What is the independent variable, the one YOU change on purpose?`,a:1,o:[
+  [`The water bath heater`,`That’s an object, not a variable. A variable is something that can change and be measured.`],
+  [`Water temperature (°C)`,`It’s specific, it matches the question, and it has units.`],
+  [`Number of cells per mL (cells/mL)`,`That’s what you measure to see the effect, so it’s the dependent variable.`],
+  [`Heat`,`Too vague. What you actually set and measure is the water’s temperature, in °C.`]]},
+ {id:'is3',row:'Variables: DV',p:`Which dependent variable is specific and measurable?`,a:3,o:[
+  [`Whether plankton are present`,`Yes-or-no data can’t show how much the cells grew. Counting cells gives you numbers.`],
+  [`How green or brown the water looks`,`Color depends on who’s looking. Pick something you can count or measure.`],
+  [`The flasks`,`That’s an object! What about the flasks are you measuring?`],
+  [`Number of dinoflagellate cells per mL after 7 days (cells/mL)`,`You can count it under a microscope, and it has units.`]]},
+ {id:'is4',row:'Variables: CVs',p:`Which list shows controlled variables that NEED to be controlled, with amounts?`,a:0,o:[
+  [`Species (L. polyedra), starting amount (500 cells/mL), light (12 hours/day), seawater nutrients (100 mL of the same mix per flask)`,`Each of these could affect growth, and each has an amount. Now only the temperature changes.`],
+  [`Flask brand, the color of your lab coat, what time lunch is`,`These won’t affect how plankton grow. Controlled variables are things that could change your results if they weren’t kept the same.`],
+  [`Light, nutrients, species`,`Good variables, but no amounts. How many hours of light? How much seawater?`],
+  [`Water temperature, cell count, light`,`The first two are your IV and DV. You can’t control the variables you’re testing!`]]},
+ {id:'is5',row:'Hypothesis',p:`Which hypothesis is strongest? Remember the frame: As the IV ___, the DV ___ because ___.`,a:3,o:[
+  [`Temperature will affect the plankton.`,`This doesn’t describe how the variables are related, and there’s no “because.”`],
+  [`As water temperature increases, the number of cells will increase.`,`Good relationship! But a hypothesis also explains WHY. Where’s your “because”?`],
+  [`As the amount of light increases, the cells will multiply because they photosynthesize more.`,`Careful! Your question is about temperature, not light. The hypothesis has to match your question.`],
+  [`As water temperature increases, the number of cells will increase up to a point and then decrease, because the enzymes inside the cells work faster in warm water but stop working when it gets too hot.`,`It matches the question, describes the relationship, and gives a reason.`]]},
+ {id:'is6',row:'Procedure: sample size',pre:proc(`Your draft procedure:`,[`Set up 6 groups of 1 flask each. Each flask gets 100 mL of seawater nutrients and 500 cells/mL of L. polyedra.`,`Keep each group in a water bath at 10, 15, 20, 25, 30, or 35 °C.`,`Give every flask 12 hours of light per day.`,`After 7 days, count the cells in a 1 mL sample under a microscope.`]),
+  p:`What’s the problem with step 1?`,a:1,o:[
+  [`There should be fewer temperatures.`,`Six temperatures give you six data points, which you’ll need to see the full pattern.`],
+  [`1 flask per temperature is too small. One contaminated flask could throw off the results, so use more, like 5 per temperature.`,`A larger sample size makes your results more reliable.`],
+  [`Each flask should get a different species.`,`Species is a controlled variable. It should stay the same.`],
+  [`Nothing, it looks great!`,`Look closer at how many flasks are in each group.`]]},
+ {id:'is7',row:'Procedure: repeated trials',pre:proc(`Your updated procedure:`,[`Set up 6 groups of 5 flasks each. Each flask gets 100 mL of seawater nutrients and 500 cells/mL of L. polyedra.`,`Keep each group in a water bath at 10, 15, 20, 25, 30, or 35 °C.`,`Give every flask 12 hours of light per day.`,`After 7 days, count the cells in a 1 mL sample under a microscope.`]),
+  p:`Which of the 5 procedure elements is still missing?`,a:2,o:[
+  [`How the IV will be manipulated`,`Step 2 does that: six water baths at different temperatures.`],
+  [`How the DV will be measured`,`Step 4 covers that: counting cells in 1 mL under a microscope.`],
+  [`Repeated trials`,`Running the whole experiment 3 times shows whether your results happen again or were just luck.`],
+  [`How the CVs will be controlled`,`Steps 1 and 3 handle that: the same species, starting amount, nutrients, and light.`]]}
+],
+DQ:[
+ {id:'dq1',row:'Graph Type',fx:'axes',p:`Which type of graph fits this data best?`,a:2,o:[
+  [`Bar graph`,`Bar graphs work best when the IV is in categories, like different species. Temperature is a number that changes smoothly.`],
+  [`Pie chart`,`Pie charts show parts of a whole. Your data shows how one variable changes with another.`],
+  [`Scatter plot with a line or curve of best fit`,`Both variables are numbers, and a line or curve of best fit will show the trend.`],
+  [`Pictograph with tiny plankton drawings`,`Cute, but not precise enough for science data.`]]},
+ {id:'dq2',row:'Axes & Units: x-axis',fx:'x',p:`Which variable goes on the x-axis?`,a:3,o:[
+  [`Cell count (cells/mL)`,`That’s your DV. The DV goes on the y-axis.`],
+  [`Trial number`,`You averaged the trials together, so trial number doesn’t get an axis.`],
+  [`Species`,`Species was a controlled variable. It stayed the same, so it doesn’t get an axis.`],
+  [`Water temperature (°C)`,`The independent variable always goes on the x-axis, with its units in parentheses.`]]},
+ {id:'dq3',row:'Axes & Units: y-axis label',fx:'y',p:`Pick the best y-axis label.`,a:1,o:[
+  [`Plankton`,`Plankton what? Labels need to say what was measured, plus units.`],
+  [`Cell count (cells/mL)`,`A clear label with units in parentheses.`],
+  [`Cell count`,`Good detail, but where are the units?`],
+  [`cells/mL`,`Units alone don’t tell the reader what was measured.`]]},
+ {id:'dq4',row:'Scale',fx:'scale',p:`Your data goes from 200 to 4,600 cells/mL. Which y-axis scale is best?`,a:1,o:[
+  [`0, 500, 2000, 2500, 5000`,`The jumps aren’t equal (500, 1500, 500, 2500). Uneven spacing makes the trend look different than it really is.`],
+  [`0, 1000, 2000, 3000, 4000, 5000`,`Equal increments that fit your data. Now the points can go on!`],
+  [`200, 1100, 2300, 2900, 4200, 4600`,`Those are just your data values! The axis needs equal, consistent increments.`],
+  [`0, 10000, 20000, 30000`,`The increments are equal, but your data would be squished into the bottom of the graph.`]]},
+ {id:'dq5',row:'Trendline',fx:'trend',p:`Look at your points: they rise, peak, then fall. Which line of best fit is accurate?`,a:2,o:[
+  [`A straight line from the first point to the last point`,`A straight line would miss the peak completely. When data rises and falls, the best fit is a curve.`],
+  [`A zigzag line that connects every point, dot to dot`,`A line of best fit doesn’t have to touch every point. It shows the overall trend.`],
+  [`A smooth curve that rises, peaks between 20 and 25 °C, then falls, passing close to the points`,`A line of best fit doesn’t have to be straight. This curve shows the real trend.`],
+  [`A flat line at the average cell count`,`A flat line says temperature had no effect. Your data clearly changes.`]]},
+ {id:'dq6',row:'Title: wording',p:`Choose the best title.`,a:0,o:[
+  [`Fig. 1: Effect of Water Temperature on Dinoflagellate Cell Count After 7 Days`,`It starts with “Fig. 1” and names both the IV and the DV.`],
+  [`Fig. 1: Plankton Data`,`Too general. A strong title names both variables.`],
+  [`Effect of Water Temperature on Dinoflagellate Cell Count After 7 Days`,`Great detail, but it’s missing “Fig. 1” at the start.`],
+  [`Fig. 1: Glowing Plankton!!`,`Fun, but the title needs to name both variables.`]]},
+ {id:'dq7',row:'Title: placement',fx:'title',p:`Last step! Where does the title go?`,a:1,o:[
+  [`Above the graph`,`That’s common in newspapers, but in science reports, figure titles go underneath.`],
+  [`Underneath the graph`,`Scientific figures put the title below. Your graph is complete!`],
+  [`On the y-axis`,`The axis already has its label. The title gets its own spot.`],
+  [`Anywhere, as long as it’s big`,`Scientists follow conventions so every reader knows where to look.`]]}
+],
+EA:[
+ {id:'ea1',row:'Claim',p:`Which claim is best? It should answer the question and describe the relationship between the variables.`,a:2,o:[
+  [`Temperature affects plankton.`,`Too general. How did the cell count change as the temperature changed?`],
+  [`At 20 °C, there were 4,600 cells/mL.`,`That’s a piece of evidence, not a claim. A claim answers the whole question.`],
+  [`As water temperature increased, the cell count increased until about 20 to 25 °C, then decreased at higher temperatures.`,`It answers the question and describes the full relationship, including the peak.`],
+  [`As water temperature increased, the cell count always increased.`,`Look at the data again! Above 25 °C, the count drops. A claim has to match all of the results.`]]},
+ {id:'ea2',row:'Evidence: specific data',p:`Which evidence is specific and includes units?`,a:3,o:[
+  [`The plankton grew best in the middle temperatures.`,`No numbers! Evidence needs specific data.`],
+  [`There were 4,600 at 20 °C.`,`4,600 what? And one data point can’t show a rise and a fall.`],
+  [`The flasks in the middle looked the darkest.`,`Observations are a start, but measured data is much stronger.`],
+  [`Cell count rose from 1,100 cells/mL at 10 °C to 4,600 cells/mL at 20 °C, then fell to 2,300 cells/mL at 30 °C and just 200 cells/mL at 35 °C.`,`Specific, with units, and it shows the whole rise and fall.`]]},
+ {id:'ea3',row:'Evidence: sufficient',p:`Which detail makes your evidence more convincing?`,a:0,o:[
+  [`Each count is an average of 5 flasks per temperature, and the experiment was repeated 3 times.`,`A large sample and repeated trials make it hard to argue your results were luck.`],
+  [`The microscope was brand new.`,`A new microscope doesn’t make the data more reliable.`],
+  [`The plankton glowed a really pretty blue.`,`Beautiful, but not evidence about growth.`],
+  [`You really wanted it to work.`,`Scientists try hard NOT to let what they want affect their results!`]]},
+ {id:'ea4',row:'Reasoning',p:`Which reasoning best explains WHY the data counts as evidence for the claim?`,a:1,o:[
+  [`The data shows the cells grew best at middle temperatures, so the claim is correct.`,`This just repeats the evidence. Reasoning needs a science concept that explains the pattern.`],
+  [`Cells grow and divide using enzymes. Warmer water speeds up enzyme reactions, so cells divided faster up to an optimum temperature. Above that, the enzymes start to lose their shape and stop working, so growth dropped. This explains why the cell count rose and then fell.`,`It uses a science concept to connect the IV to the DV, and it explains both the rise and the fall.`],
+  [`Plankton need sunlight to photosynthesize.`,`True! But light was controlled. Reasoning has to connect your IV, temperature, to your DV.`],
+  [`Plankton like warm water, but they get tired when it’s too hot.`,`Plankton don’t get tired like we do. Reasoning has to use accepted science.`]]}
+],
+RC:[
+ {id:'rc1',row:'Synthesis: topic sentence',p:`A strong summary opens with a topic sentence about the big idea that links BOTH articles. Which is best?`,a:1,o:[
+  [`The Blob was a patch of warm water in the Pacific Ocean.`,`This only covers Article 2, and it’s a detail, not the big idea.`],
+  [`Both studies show that temperature controls how well plankton grow, so warming water can change which plankton thrive and where.`,`This names the idea that unifies both articles.`],
+  [`This paragraph is about two articles on plankton.`,`This announces the topic but doesn’t say anything about it. A topic sentence makes a point.`],
+  [`Tropical oceans could lose phytoplankton variety.`,`That’s only Article 1. The topic sentence should connect both.`]]},
+ {id:'rc2',row:'Breadth',p:`Breadth means including all the important points. Which set must your summary include?`,a:2,o:[
+  [`The study looked at 194 kinds of phytoplankton, and the Blob formed in 2013.`,`True, but these are numbers and dates, not the main findings.`],
+  [`Plankton are small, and the ocean is big.`,`Too general. These don’t describe what the researchers discovered.`],
+  [`Each kind of phytoplankton grows best near the temperature of its home waters, and unusually warm water in 2015 helped a toxic diatom bloom far outside its normal range.`,`These are the key findings of each study.`],
+  [`Only the toxic bloom, because it’s more dramatic.`,`A synthesis needs the important points from BOTH articles.`]]},
+ {id:'rc3',row:'Depth: rabbit holes',p:`Depth means not too general and not too specific. Which detail is a “rabbit hole,” too minor for a short summary?`,a:2,o:[
+  [`Each kind of phytoplankton grew fastest near the average temperature of its home ocean.`,`That’s a key finding. Keep it!`],
+  [`Warm water let a toxic diatom spread farther north than usual.`,`That’s the main event in Article 2. Keep it!`],
+  [`The first study’s researchers worked at Michigan State University.`,`True, but it doesn’t help explain the big idea. Leave it out.`],
+  [`Tropical plankton were already living close to their limit.`,`This one is useful. It shows why warming matters more in some places.`]]},
+ {id:'rc4',row:'Depth: level of detail',p:`Which sentence has the right depth for a summary?`,a:3,o:[
+  [`Warm water does things to plankton.`,`Too general. This could describe almost any article about the ocean.`],
+  [`The Blob formed in 2013 in the northeast Pacific, lasted through 2015, and its surface water was more than 2.5 °C warmer than normal, which scientists measured over a huge area.`,`Accurate, but packed with details. A short summary focuses on the key finding.`],
+  [`Article 2 is about a blob.`,`Too general, and it describes the article instead of the findings.`],
+  [`In lab tests, cells from the 2015 bloom divided much faster when the water was warmer.`,`Specific enough to mean something, short enough for a summary.`]]},
+ {id:'rc5',row:'Synthesis: weaving',p:`Which sentence weaves the two articles together instead of summarizing them one at a time?`,a:2,o:[
+  [`In the first article, plankton have favorite temperatures. In the second article, there was a toxic bloom.`,`This summarizes one article, then the other. Look for a sentence that connects them.`],
+  [`The second article was scarier than the first.`,`That’s an opinion, not a connection between the findings.`],
+  [`The 2015 bloom is a real-world example of the lab pattern: when water warms, plankton that do well in warmer conditions can take over places where they normally can’t.`,`One sentence, both articles, one big idea.`],
+  [`Sea lions got sick from the toxin.`,`That’s only Article 2.`]]},
+ {id:'rc6',row:'Synthesis: own words',p:`Article 2 says: “In lab experiments, cells from the bloom divided two to three times faster when they were given warmer temperatures and more nutrients.” Which version is fully in your own words?`,a:0,o:[
+  [`When researchers warmed the water and added extra nutrients, the bloom’s cells multiplied much more quickly.`,`Same idea, completely new wording.`],
+  [`Cells from the bloom divided two to three times faster when given warmer temperatures.`,`This copies long strings of words from the article. Changing a word or two isn’t paraphrasing.`],
+  [`The cells divided faster when they were given warmer temperatures and more nutrients.`,`Still copied: “when they were given warmer temperatures and more nutrients” comes straight from the article.`],
+  [`“Cells from the bloom divided two to three times faster.”`,`Quotation marks give credit, but a summary should be in your own words.`]]}
+]}};
+
+Object.values(INV).forEach(inv=>ORDER.forEach(sk=>inv.Q[sk].forEach((q,i,arr)=>{
+  q.t='q'; q.sk=sk; q.n=(i+1)+'/'+arr.length; q.uid=inv.key+'-'+q.id; q.graph=(sk==='DQ'); q.ref=sk==='EA'?'data':sk==='RC'?'articles':null;
+})));
+function I(){return INV[S.inv];}
+
+/* ---------- geometry helpers ---------- */
+function hb(px,py){return {x:px+4,y:py+11,w:8,h:5};}
+function hit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
+function tryMove(mx,my){
+  const nx=S.px+mx, ny=S.py+my, h=hb(nx,ny);
+  if(h.x<3||h.x+h.w>157||h.y<31||h.y+h.h>142) return;
+  for(const o of THINGS) if(hit(h,o.r)) return;
+  S.px=nx; S.py=ny;
+}
+function nearby(){
+  const h=hb(S.px,S.py); let best=null,bd=1e9;
+  for(const o of THINGS){
+    const e={x:o.r.x-5,y:o.r.y-5,w:o.r.w+10,h:o.r.h+10};
+    if(!hit(h,e)) continue;
+    const d=Math.hypot(h.x+4-(o.r.x+o.r.w/2),h.y+2-(o.r.y+o.r.h/2));
+    if(d<bd){bd=d;best=o.id;}
+  }
+  return best;
+}
+
+/* ---------- drawing the lab ---------- */
+function drawRoom(){
+  R(0,0,160,144,3);
+  ctx.fillStyle=C[2];
+  for(let x=0;x<160;x+=16) ctx.fillRect(x,30,1,114);
+  for(let y=30;y<144;y+=16) ctx.fillRect(0,y,160,1);
+  R(0,0,160,30,1); R(0,0,160,2,0); R(0,28,160,2,0);
+  ctx.fillStyle=C[0]; for(let x=2;x<160;x+=6) ctx.fillRect(x,25,2,1);
+  box(60,4,40,19,2,0); R(79,5,2,17,0); R(61,12,38,2,0); R(65,7,3,3,3); R(86,7,7,2,3); R(88,6,3,1,3);
+  box(10,5,14,15,3,0); R(12,12,10,1,2); R(16,7,1,11,2); R(15,11,3,3,1);
+  box(140,6,11,11,3,0); R(145,8,1,4,0); R(145,11,3,1,0);
+  R(30,15,28,1,0); R(31,16,1,2,0); R(56,16,1,2,0);
+  for(let i=0;i<4;i++){const bx=32+i*6;
+    if(i<S.stage){R(bx+1,6,1,3,2);R(bx+3,6,1,3,2);box(bx,9,5,6,3,0);R(bx+2,11,1,2,1);}
+    else R(bx+2,12,1,3,2);}
+}
+function drawDesk(){
+  const x=8,y=30,w=34;
+  box(x,y,w,6,1,0); box(x+1,y+5,w-2,9,2,0); R(x+2,y+14,2,3,0); R(x+w-4,y+14,2,3,0);
+  box(x+4,y-3,11,6,3,0); R(x+9,y-2,1,4,1); R(x+6,y-1,2,1,1); R(x+11,y-1,2,1,1); R(x+6,y+1,2,1,1); R(x+11,y+1,2,1,1);
+  R(x+16,y+1,5,1,0);
+  box(x+22,y-7,7,9,3,0); R(x+23,y-3,5,4,2); R(x+21,y-7,9,1,0);
+}
+function drawBench(){
+  const x=110,y=30,w=42;
+  box(x,y,w,6,1,0); box(x+1,y+5,w-2,9,2,0); R(x+2,y+14,2,3,0); R(x+w-4,y+14,2,3,0);
+  if(S.inv==='plankton'){
+    const counts=[1100,2900,4600,4200,2300];
+    for(let i=0;i<5;i++){
+      const px=x+3+i*8, v=S.growth*counts[i], fill=v>3500?1:v>1600?2:3;
+      box(px+2,y-9,3,5,3,0); R(px+1,y-9,5,1,0);
+      box(px,y-5,7,7,fill,0); R(px,y-5,1,1,1); R(px+6,y-5,1,1,1);
+      if(fill===1){R(px+2,y-3,1,1,3);R(px+4,y-1,1,1,3);}
+    }
+    return;
+  }
+  for(let i=0;i<5;i++){
+    const px=x+3+i*8, h=Math.round(2+S.growth*(3+i*1.6));
+    R(px+2,y-2-h,2,h,1);
+    R(px,y-2-h,2,2,2); R(px+4,y-3-h,2,2,2);
+    if(h>5){R(px+4,y-2-Math.round(h/2),2,1,2); R(px,y-1-Math.round(h/3),2,1,2);}
+    box(px,y-2,6,5,1,0);
+  }
+}
+function drawProp(){
+  if(S.inv==='plankton'){
+    box(93,31,12,15,2,0); R(95,34,8,5,3); R(95,36,8,3,1);
+    R(97,41,4,1,0); R(98,40,1,3,0);
+    R(102,42,1,1,(Math.floor(S.t/500)%2)?3:0);
+    return;
+  }
+  box(94,32,10,14,1,0); R(96,35,6,6,2); R(98,37,2,2,0); R(98,42,2,2,2);
+}
+function drawFloaters(){
+  if(S.inv==='plankton'){
+    for(let i=0;i<3;i++){
+      const ph=((S.t/2200)+i/3)%1, ny=Math.round(31-ph*14), nx=96+i*3+Math.round(Math.sin(ph*8+i)*1);
+      ctx.fillStyle=C[3]; ctx.fillRect(nx,ny,1,1); if(ph<0.5) ctx.fillRect(nx+1,ny,1,1);
+    }
+    return;
+  }
+  for(let i=0;i<3;i++){
+    const ph=((S.t/1700)+i/3)%1, ny=Math.round(30-ph*24), nx=Math.round(97+Math.sin(ph*6+i*2)*5+(i-1)*3);
+    ctx.fillStyle=C[3]; ctx.fillRect(nx,ny+3,2,2); ctx.fillRect(nx+1,ny,1,4); ctx.fillRect(nx+2,ny,1,1);
+  }
+}
+const DOLPHIN=[
+".........00.........",
+"........010.........",
+"0.....000110000.....",
+"00..0011111111100...",
+".00011111111111010..",
+"..011111111111111000",
+".0011333333333333330",
+"00..0033333333300000",
+"0.....0000000000....",
+"..........00........"];
+function drawSprout(){
+  /* Finn the dolphin, hovering and bobbing, turning to face the player */
+  const b=Math.sin(S.t/380), dx=66, dy=31+Math.round(b*2);
+  const sw=8-Math.round(b*2);
+  R(76-Math.round(sw/2),46,sw,1,2); R(77-Math.round(sw/2)+1,47,Math.max(2,sw-4),1,2);
+  const left=(S.px+8)<(dx+10);
+  for(let r=0;r<DOLPHIN.length;r++){const row=DOLPHIN[r];
+    for(let i=0;i<row.length;i++){const ch=row[i]; if(ch==='.') continue; ctx.fillStyle=C[+ch];
+      ctx.fillRect(left?dx+row.length-1-i:dx+i,dy+r,1,1);}}
+}
+function drawBoard(){
+  R(12,122,2,12,0); R(36,122,2,12,0); R(10,133,6,1,0); R(34,133,6,1,0);
+  box(7,104,36,20,3,0); R(8,105,34,1,2);
+  txt(ctx,'CER',12,108,C[1]); R(12,115,22,1,2); R(12,118,15,1,2);
+  R(9,123,32,2,1); R(14,122,4,1,0);
+  if(S.stage>2){ctx.fillStyle=C[0]; [[33,113],[34,114],[35,113],[36,112],[37,111],[38,110]].forEach(p=>ctx.fillRect(p[0],p[1],1,2));}
+}
+function drawShelf(){
+  const x=118,y=98,w=36,h=40;
+  box(x,y,w,h,1,0);
+  for(let r=0;r<3;r++){
+    const top=y+2+r*12, bot=top+10; R(x+1,bot+1,w-2,1,0);
+    let bx=x+3, k=r*3+1;
+    while(bx<x+w-6){
+      const bw=2+(k%3===0?1:0), bh=6+((k*5)%4);
+      R(bx,bot-bh+1,bw,bh,(k%2)?2:3); R(bx,bot-bh+1,bw,1,0);
+      bx+=bw+1; k++;
+    }
+  }
+  box(145,92,7,7,1,0); R(147,88,1,4,2); R(149,87,1,5,2); R(146,89,1,1,2);
+}
+function drawPlayer(){
+  const x=Math.round(S.px), y=Math.round(S.py);
+  R(x+3,y+15,10,1,2);
+  let legs=LEGS.stand;
+  if(S.moving){const f=Math.floor(S.walkT/140)%4; legs=f===0?LEGS.b:f===2?LEGS.c:LEGS.stand;}
+  drawRows(BODY,x,y); drawRows(legs,x,y+14);
+}
+function drawTag(id){
+  const i=ORDER.indexOf(id), st=i<S.stage?'done':i===S.stage?'now':'locked', t=TAGS[id];
+  const w=tw(id)+4+(st==='done'?6:0), x=Math.round(t.x-w/2);
+  box(x,t.y,w,9,st==='locked'?1:0,0);
+  txt(ctx,id,x+2,t.y+2,C[st==='locked'?2:3]);
+  if(st==='done'){const k=x+w-7; ctx.fillStyle=C[2]; [[0,4],[1,5],[2,4],[3,3],[4,2]].forEach(p=>ctx.fillRect(k+p[0],t.y+p[1],1,1));}
+  if(st==='now'&&S.mode!=='title'){
+    const by=t.ay+Math.round(Math.sin(S.t/170)*1.5), cx=t.x;
+    for(let r=0;r<5;r++){ctx.fillStyle=C[0];ctx.fillRect(cx-4+r,by+r,9-2*r,1);}
+    R(cx-4,by-1,9,1,0);
+    for(let r=0;r<4;r++){ctx.fillStyle=C[3];ctx.fillRect(cx-3+r,by+r,7-2*r,1);}
+  }
+}
+function drawPrompt(){
+  if(S.mode!=='walk'||!nearby()) return;
+  const x=Math.min(150,Math.round(S.px)+12), y=Math.max(1,Math.round(S.py)-7);
+  box(x,y,8,9,3,0); txt(ctx,'A',x+2,y+2,C[0]);
+}
+function render(){
+  drawRoom();
+  const list=[[47,drawDesk],[47,drawBench],[46,drawProp],[48,drawSprout],[134,drawBoard],[138,drawShelf],[S.py+16,drawPlayer]];
+  list.sort((a,b)=>a[0]-b[0]).forEach(d=>d[1]());
+  drawFloaters();
+  ORDER.forEach(drawTag);
+  drawPrompt();
+}
+
+/* ---------- the graph (DQ) ---------- */
+function fitPoly(data,deg){
+  const n=deg+1, A=[];
+  for(let i=0;i<n;i++){A.push([]);for(let j=0;j<n;j++){let s=0;data.forEach(d=>s+=Math.pow(d[0],i+j));A[i].push(s);}let t=0;data.forEach(d=>t+=d[1]*Math.pow(d[0],i));A[i].push(t);}
+  for(let i=0;i<n;i++) for(let j=i+1;j<n;j++){const f=A[j][i]/A[i][i]; for(let k=i;k<=n;k++) A[j][k]-=f*A[i][k];}
+  const c=new Array(n).fill(0);
+  for(let i=n-1;i>=0;i--){let s=A[i][n]; for(let k=i+1;k<n;k++) s-=A[i][k]*c[k]; c[i]=s/A[i][i];}
+  return x=>c.reduce((s,ci,k)=>s+ci*Math.pow(x,k),0);
+}
+function drawGraph(c){
+  const inv=I(), G=S.graph, cfg=inv.graph, data=inv.data;
+  const g=c.getContext('2d'), W=176, H=142, PL=cfg.PL, PR=170, PT=8, PB=100;
+  g.fillStyle=C[3]; g.fillRect(0,0,W,H);
+  if(!G.axes){const m='NO GRAPH YET'; txt(g,m,Math.round((W-tw(m))/2),68,C[1]); return;}
+  const xp=v=>Math.round(PL+v*(PR-PL)/cfg.xMax), yp=v=>Math.round(PB-v*(PB-PT)/cfg.yMax);
+  if(G.scale){
+    g.fillStyle=C[2];
+    for(let v=cfg.yStep;v<=cfg.yMax;v+=cfg.yStep) for(let x=PL+2;x<=PR;x+=2) g.fillRect(x,yp(v),1,1);
+  }
+  g.fillStyle=C[0]; g.fillRect(PL,PT,1,PB-PT+1); g.fillRect(PL,PB,PR-PL+1,1);
+  if(G.scale){
+    for(let v=0;v<=cfg.xMax;v+=cfg.xStep){const X=xp(v),s=String(v); g.fillStyle=C[0]; g.fillRect(X,PB+1,1,2); txt(g,s,X-Math.floor(tw(s)/2),PB+4,C[0]);}
+    for(let v=0;v<=cfg.yMax;v+=cfg.yStep){const Y=yp(v),s=String(v); g.fillStyle=C[0]; g.fillRect(PL-2,Y,2,1); txt(g,s,PL-4-tw(s),Y-2,C[0]);}
+  }
+  if(G.trend){
+    const f=fitPoly(data,cfg.fit), x0=data[0][0], x1=data[data.length-1][0];
+    g.fillStyle=C[1]; let prev=null;
+    for(let X=xp(x0);X<=xp(x1);X++){
+      const v=Math.max(0,f(x0+(X-xp(x0))*(x1-x0)/(xp(x1)-xp(x0)))), Y=yp(v);
+      if(prev===null) g.fillRect(X,Y,1,2);
+      else{const a=Math.min(prev,Y),b=Math.max(prev,Y); g.fillRect(X,a,1,b-a+2);}
+      prev=Y;
+    }
+  }
+  if(G.scale){
+    data.forEach(d=>{const X=xp(d[0]),Y=yp(d[1]); g.fillStyle=C[0]; g.fillRect(X-2,Y-2,5,5); g.fillStyle=C[2]; g.fillRect(X-1,Y-1,3,3);});
+  }
+  if(G.x) txt(g,cfg.xLabel,Math.round((PL+PR)/2-tw(cfg.xLabel)/2),PB+11,C[0]);
+  if(G.y) txt(g,cfg.yLabel,3,Math.round((PT+PB)/2+tw(cfg.yLabel)/2),C[0],true);
+  if(G.title){
+    const a=cfg.title[0], b=cfg.title[1];
+    txt(g,a,Math.round((W-tw(a))/2),PB+23,C[0]); txt(g,b,Math.round((W-tw(b))/2),PB+31,C[0]);
+  }
+}
+
+/* ---------- sound ---------- */
+let actx=null;
+function unlockAudio(){
+  try{ if(!actx){const A=window.AudioContext||window.webkitAudioContext; if(A) actx=new A();} if(actx&&actx.state==='suspended') actx.resume(); }catch(e){}
+}
+function tone(f,d,vol,delay){
+  if(!S.sound||!actx) return;
+  try{
+    const o=actx.createOscillator(), g=actx.createGain(), t=actx.currentTime+(delay||0);
+    o.type='square'; o.frequency.value=f;
+    g.gain.setValueAtTime(vol||0.035,t); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+d+0.03);
+  }catch(e){}
+}
+const sfx={
+  blip:()=>tone(900,0.025,0.012),
+  sel:()=>tone(660,0.05,0.03),
+  right:()=>{tone(784,0.08);tone(988,0.08,0.035,0.08);tone(1319,0.16,0.035,0.16);},
+  wrong:()=>{tone(220,0.12,0.04);tone(165,0.2,0.04,0.1);},
+  done:()=>{[523,659,784,1047].forEach((f,i)=>tone(f,0.12,0.035,i*0.09));},
+  start:()=>{[392,523,659,784,659,784].forEach((f,i)=>tone(f,0.1,0.03,i*0.08));},
+  fanfare:()=>{[[523,0],[659,.1],[784,.2],[1047,.3],[784,.45],[1047,.55],[1319,.7]].forEach(([f,d])=>tone(f,.14,.035,d));}
+};
+
+/* ---------- shared panels and scripts ---------- */
+const SAY=(text,who)=>({t:'say',text,who:who||'FINN'});
+function dataHTML(){
+  const inv=I();
+  return `<table class="dt"><thead><tr><th>${inv.dataHead[0]}</th><th>${inv.dataHead[1]}</th></tr></thead><tbody>${
+    inv.data.map(d=>`<tr><td>${d[0]}</td><td>${inv.fmt(d[1])}</td></tr>`).join('')}</tbody></table>
+  <p class="small">${inv.dataNote}</p>`;
+}
+function refHTML(kind){
+  if(kind==='data') return `<details class="ref"><summary>Show your data</summary>${dataHTML()}</details>`;
+  if(kind==='articles') return `<details class="ref"><summary>Re-read the articles</summary>${I().art1}${I().art2}</details>`;
+  return '';
+}
+const TIPS={
+  IS:`Remember: a testable question names a specific IV and DV. The hypothesis follows “As the IV ___, the DV ___ because ___.” Variables are specific, with units. The procedure has all 5 elements, including a large sample and repeated trials.`,
+  DQ:`Remember: pick the right graph type, put the IV on the x-axis and the DV on the y-axis with units in parentheses, use equal increments, add a line or curve of best fit, and put “Fig. 1” and a detailed title underneath.`,
+  EA:`Remember: the claim answers the question, the evidence is specific and sufficient with units, and the reasoning uses science to explain why the evidence supports the claim.`,
+  RC:`Remember: open with the idea that links both sources, include the key findings from each, skip the rabbit holes, weave the articles together, and use your own words.`};
+function stars(){return Object.values(S.results).filter(Boolean).length;}
+const BADGES={
+  IS:{name:'LAB PLANNER',line:`You designed a testable experiment, from question to procedure.`},
+  DQ:{name:'GRAPH MASTER',line:`You built a graph that checks every row of the DQ rubric.`},
+  EA:{name:'ARGUMENT ACE',line:`You backed up a claim with evidence and reasoning.`},
+  RC:{name:'SUPER SYNTHESIZER',line:`You connected two research articles in your own words.`}};
+function trophyName(){return S.pearls>=44?'GOLD':S.pearls>=34?'SILVER':'BRONZE';}
+function drawBadge(c,id){
+  c.width=40; c.height=46; const g=c.getContext('2d'); g.clearRect(0,0,40,46);
+  const P=(x,y,w,h,k)=>{g.fillStyle=C[k];g.fillRect(x,y,w,h);};
+  P(9,26,9,19,0); P(10,26,7,17,1); P(22,26,9,19,0); P(23,26,7,17,1); g.clearRect(12,42,3,3); g.clearRect(25,42,3,3);
+  for(let y=0;y<34;y++) for(let x=0;x<40;x++){const d=Math.hypot(x+.5-20,y+.5-18); if(d>14.5) continue; P(x,y,1,1,d>13.3?0:d>11.3?1:d>10.3?0:3);}
+  if(id==='IS'){P(17,10,6,1,0); P(18,10,4,5,0); P(19,11,2,4,3);
+    for(let r=0;r<9;r++){const h=1+Math.round(r*0.7), y=15+r; P(20-h-1,y,2*h+2,1,0); P(20-h,y,2*h,1,r>3?1:3);} P(12,24,16,1,0);}
+  if(id==='DQ'){P(13,11,1,13,0); P(13,23,15,1,0); for(let x=15;x<=27;x++) P(x,Math.round(21-(x-15)*0.75),1,1,1);
+    [[16,20],[19,18],[22,15],[25,12]].forEach(p=>P(p[0],p[1],2,2,0));}
+  if(id==='EA'){P(11,11,18,11,0); P(12,12,16,9,3); P(15,22,3,2,0); P(16,22,1,1,3); txt(g,'CER',14,14,C[0]);}
+  if(id==='RC'){P(11,13,9,11,0); P(12,14,7,9,3); P(20,13,9,11,0); P(21,14,7,9,3); P(19,13,2,12,0);
+    for(let k=0;k<3;k++){P(13,16+k*2,5,1,1); P(22,16+k*2,5,1,1);}}
+}
+function drawTrophy(c){
+  c.width=48; c.height=56; const g=c.getContext('2d'); g.clearRect(0,0,48,56);
+  const P=(x,y,w,h,k)=>{g.fillStyle=C[k];g.fillRect(x,y,w,h);};
+  P(6,19,6,2,0); P(6,19,2,10,0); P(6,27,7,2,0); P(36,19,6,2,0); P(40,19,2,10,0); P(35,27,7,2,0);
+  for(let y=17;y<36;y++){const hw=Math.max(4,14-Math.floor((y-17)*0.55)); P(24-hw,y,2*hw,1,0); P(25-hw,y,2*hw-2,1,1);}
+  P(10,16,28,2,0); for(let y=19;y<31;y++) P(16,y,2,1,3);
+  P(24,21,1,7,3); P(21,24,7,1,3); P(23,23,3,3,3);
+  P(21,36,6,5,0); P(22,36,4,5,1); P(14,41,20,5,0); P(15,42,18,3,1); P(11,46,26,6,0); P(12,47,24,4,1);
+  for(let r=0;r<DOLPHIN.length;r++){const row=DOLPHIN[r]; for(let i=0;i<row.length;i++){const ch=row[i]; if(ch==='.') continue; g.fillStyle=C[+ch]; g.fillRect(14+i,6+r,1,1);}}
+}
+function popPearls(n,bonus){
+  const el=document.createElement('div'); el.className='pop';
+  el.innerHTML=`+${n} <i class="pearl"></i>${bonus?' STREAK!':''}`;
+  document.getElementById('screen').appendChild(el); setTimeout(()=>el.remove(),1400);
+}
+function showBadge(id){
+  const b=BADGES[id], got=S.pearls-S.spStart;
+  ov.className='ov show';
+  ov.innerHTML=`<div class="panel award" role="dialog" aria-label="Badge earned"><p class="big">BADGE EARNED!</p>
+    <div class="awardart"><canvas aria-label="${b.name} badge"></canvas><i class="spark s1"></i><i class="spark s2"></i><i class="spark s3"></i><i class="spark s4"></i></div>
+    <p class="aname">${b.name}</p><p>${b.line}</p>
+    <p class="earn">+${got} <i class="pearl"></i> pearls at this station</p>
+    <div class="btnrow"><button class="cont">CONTINUE ▶</button></div></div>`;
+  drawBadge(ov.querySelector('canvas'),id); sfx.fanfare();
+  const c=ov.querySelector('.cont'); c.addEventListener('click',()=>next()); c.focus({preventScroll:true});
+}
+function showTrophy(){
+  const t=trophyName();
+  ov.className='ov show';
+  ov.innerHTML=`<div class="panel award" role="dialog" aria-label="Trophy"><p class="big">${t} TROPHY!</p>
+    <div class="awardart"><canvas aria-label="${t} trophy"></canvas><i class="spark s1"></i><i class="spark s2"></i><i class="spark s3"></i><i class="spark s4"></i></div>
+    <p class="aname">DOLPHIN LAB CHAMPION</p>
+    <p>You collected <b>${S.pearls}</b> <i class="pearl"></i> pearls and all four badges.</p>
+    <div class="badgerow">${ORDER.map(id=>`<canvas data-badge="${id}" aria-label="${BADGES[id].name} badge"></canvas>`).join('')}</div>
+    <p class="small">Gold: 44 or more pearls. Silver: 34 or more. Bronze: you finished the whole lab!</p>
+    <div class="btnrow"><button class="cont">SEE LAB REPORT ▶</button></div></div>`;
+  drawTrophy(ov.querySelector('.awardart canvas'));
+  ov.querySelectorAll('canvas[data-badge]').forEach(cv2=>drawBadge(cv2,cv2.dataset.badge));
+  sfx.fanfare();
+  const c=ov.querySelector('.cont'); c.addEventListener('click',()=>next()); c.focus({preventScroll:true});
+}
+function totalQ(){return ORDER.reduce((n,sk)=>n+I().Q[sk].length,0);}
+function reportHTML(){
+  const inv=I(), n=stars(), N=totalQ();
+  return `<p class="big">${trophyName()} TROPHY</p><p><i class="pearl"></i> ${S.pearls} pearls collected. ★ ${n} of ${N} answers right on the first try.</p><p>Investigation: ${inv.pick}</p>
+  <div class="badgerow">${ORDER.map((id,i)=>i<S.stage?`<canvas data-badge="${id}" aria-label="${BADGES[id].name} badge"></canvas>`:'').join('')}</div>${
+    ORDER.map(sk=>`<div class="rep"><h3>[${sk}] ${SKN[sk]}</h3><ul>${
+      inv.Q[sk].map(q=>{const r=S.results[q.uid]; return `<li>${r===true?'★':r===false?'☆':'·'} ${q.row}</li>`;}).join('')
+    }</ul><p class="tip">${TIPS[sk]}</p></div>`).join('')}
+  <p class="small">★ means correct on the first try. ☆ means you got there after another look.</p>
+  <p class="small">${inv.note}</p>`;
+}
+function reportPanel(){
+  return {t:'panel',tag:'LAB REPORT',html:reportHTML,
+    buttons:`<button class="alt" data-act="again">PLAY AGAIN</button><button class="cont">BACK TO THE LAB</button>`};
+}
+function scriptFor(id){
+  const inv=I(), Q=inv.Q;
+  if(id==='IS') return [
+    SAY(`Welcome to the Planning Desk! This is IS: Investigation Skills.`),
+    SAY(`Before we start the experiment, we need a plan: a question, variables, a hypothesis, and a procedure.`),
+    ...Q.IS,
+    ()=>{S.stage=1;updateHud();},
+    {t:'badge',id:'IS'},
+    SAY(`Your plan is ready! Let’s run it: 3 trials, ${inv.days} days each. Watch the ${inv.names.DQ.toLowerCase()}!`),
+    {t:'cut'},
+    SAY(`Every sample has been measured. Head to the ${inv.names.DQ} in the top right for DQ.`)];
+  if(id==='DQ') return [
+    SAY(`The ${inv.names.DQ}! This is DQ: Data Analysis & Quantitative Reasoning.`),
+    {t:'panel',tag:'[DQ] YOUR DATA',html:()=>dataHTML()+`<p>Your job: turn this table into a graph that hits every row of the DQ rubric.</p>`},
+    ...Q.DQ,
+    ()=>{S.stage=2;updateHud();},
+    {t:'badge',id:'DQ'},
+    {t:'panel',tag:'[DQ] FIG. 1 COMPLETE',graph:true,html:`<p>Your graph checks every row of the DQ rubric: graph type, title, axes and units, and scale and trendline.</p>`},
+    SAY(`Beautiful graph! But what does it MEAN? Head to the Whiteboard in the bottom left for EA.`)];
+  if(id==='EA') return [
+    SAY(`The Whiteboard! This is EA: Evidence-based Argumentation.`),
+    SAY(`Your job is to convince other scientists that your data means something. We’ll build it in three parts: Claim, Evidence, and Reasoning.`),
+    Q.EA[0],Q.EA[1],Q.EA[2],
+    SAY(inv.science[0]),
+    SAY(inv.science[1]),
+    Q.EA[3],
+    ()=>{S.stage=3;updateHud();},
+    {t:'badge',id:'EA'},
+    SAY(`That’s a strong argument! But scientists never work alone. They build on each other’s research.`),
+    SAY(`Head to the Bookshelf in the bottom right for RC.`)];
+  return [
+    SAY(`The Bookshelf! This is RC: Research & Communication.`),
+    SAY(inv.rcIntro),
+    {t:'panel',tag:'[RC] ARTICLE 1',html:inv.art1},
+    {t:'panel',tag:'[RC] ARTICLE 2',html:inv.art2},
+    SAY(`Now let’s practice writing ONE summary paragraph that connects both articles.`),
+    ...Q.RC,
+    ()=>{S.stage=4;updateHud();sfx.done();},
+    {t:'panel',tag:'[RC] MODEL SUMMARY',html:inv.model},
+    {t:'badge',id:'RC'},
+    SAY(`You did it! You planned, measured, argued, and researched like a real scientist.`),
+    SAY(`You earned all four badges. Time for your trophy!`),
+    {t:'trophy'},
+    reportPanel()];
+}
+const INTRO=[
+  SAY(`Hi! I’m Finn, your lab assistant. Welcome to Dolphin Lab, scientist!`),
+  SAY(`The lab has four stations. Each one practices a Doing Science skill: IS, DQ, EA, and RC.`),
+  {t:'choose'},
+  ()=>{queue.unshift(SAY(I().intro));},
+  SAY(`Walk with the arrow keys, WASD, or the D-pad. Press A (Space or Enter) to talk and choose answers. Press B (X) for a hint.`),
+  SAY(`Start at the Planning Desk in the top left. Follow the bouncing arrow!`)];
+function hintText(){
+  if(S.stage>=4) return `You finished every station! Talk to me any time to see your Lab Report again.`;
+  const id=ORDER[S.stage];
+  return `Next stop: the ${I().names[id]} (${id}) in the ${PLACES[id]}. Walk up to it and press A.`;
+}
+
+/* ---------- dialog runner ---------- */
+const ov=document.getElementById('ov');
+let queue=[],cur=null,onDone=null,typing=null,QS=null;
+function closeOv(){ov.className='ov';ov.innerHTML='';typing=null;}
+function run(steps,done){
+  held.up=held.down=held.left=held.right=false;
+  queue=steps.slice(); onDone=done||null; S.mode='dialog'; next();
+}
+function next(){
+  const gen=S.gen;
+  while(queue.length&&typeof queue[0]==='function'){queue.shift()(); if(gen!==S.gen) return;}
+  QS=null;
+  if(!queue.length){cur=null;closeOv();S.mode='walk';const f=onDone;onDone=null;if(f) f();return;}
+  cur=queue.shift();
+  if(cur.t==='say') showSay(cur);
+  else if(cur.t==='q') showQ(cur);
+  else if(cur.t==='panel') showPanel(cur);
+  else if(cur.t==='choose') showChoose();
+  else if(cur.t==='cut') showCut();
+  else if(cur.t==='badge') showBadge(cur.id);
+  else if(cur.t==='trophy') showTrophy();
+}
+function showSay(s){
+  ov.className='ov show';
+  ov.innerHTML=`<div class="say" role="dialog" aria-label="${s.who}"><div class="who">${s.who}</div><div class="txt"></div><div class="more" aria-hidden="true">▼</div></div>`;
+  const el=ov.querySelector('.txt'); el.setAttribute('aria-label',s.text);
+  typing={el,full:s.text,i:0,acc:0};
+  ov.querySelector('.say').addEventListener('click',()=>pressA());
+}
+function finishTyping(){
+  if(!typing) return;
+  typing.i=typing.full.length; typing.el.textContent=typing.full;
+  const b=ov.querySelector('.say'); if(b) b.classList.add('done');
+}
+function showChoose(){
+  ov.className='ov show';
+  ov.innerHTML=`<div class="panel" role="dialog" aria-label="Choose an investigation"><div class="ptag"><span class="sk">CHOOSE AN INVESTIGATION</span></div>
+    <p class="prompt">Which question do you want to investigate today?</p>
+    <div class="opts">${Object.values(INV).map(inv=>`<button class="opt choice" data-inv="${inv.key}"><span class="cur" aria-hidden="true">▶</span><span>${inv.pick}</span></button>`).join('')}</div>
+    <p class="small">You can play the other one later with PLAY AGAIN.</p></div>`;
+  const btns=[...ov.querySelectorAll('.choice')];
+  btns.forEach(b=>{
+    b.addEventListener('click',()=>{S.inv=b.dataset.inv; sfx.right(); next();});
+    b.addEventListener('focus',()=>{btns.forEach(x=>x.classList.toggle('sel',x===b));});
+  });
+  btns[0].focus({preventScroll:true});
+}
+function showQ(q){
+  QS={q,sel:0,tried:new Set(),done:false,first:true};
+  ov.className='ov show';
+  ov.innerHTML=`<div class="panel" role="dialog" aria-label="${SKN[q.sk]} question">
+    <div class="ptag"><span class="sk">[${q.sk}]</span><span class="row">${q.row.toUpperCase()}</span><span class="qn">${q.n}</span></div>
+    <div class="qwrap${(q.graph||q.pre)?' side':''}">${(q.graph||q.pre)?`<div class="qside">${q.graph?'<canvas class="graph" width="176" height="142" aria-label="Your graph so far"></canvas>':''}${q.pre||''}</div>`:''}<div class="qmain">
+    ${refHTML(q.ref)}
+    <p class="prompt">${q.p}</p>
+    <div class="opts">${q.o.map((o,i)=>`<button class="opt" data-i="${i}"><span class="cur" aria-hidden="true">▶</span><span>${o[0]}</span></button>`).join('')}</div>
+    <div class="fb" role="status" aria-live="polite"></div>
+    <div class="btnrow"><button class="cont" hidden>CONTINUE ▶</button></div></div></div></div>`;
+  const g=ov.querySelector('canvas.graph'); if(g) drawGraph(g);
+  ov.querySelectorAll('.opt').forEach(b=>{
+    const i=+b.dataset.i;
+    b.addEventListener('click',()=>{if(QS&&!QS.done&&!QS.tried.has(i)){setSel(i,true);choose(i);}});
+    b.addEventListener('focus',()=>{if(QS&&!QS.done&&!QS.tried.has(i)) setSel(i,true);});
+  });
+  ov.querySelector('.cont').addEventListener('click',()=>next());
+  setSel(0,false,false);
+}
+function setSel(i,noFocus,scroll){
+  if(!QS) return; QS.sel=i;
+  const btns=ov.querySelectorAll('.opt');
+  btns.forEach((b,j)=>b.classList.toggle('sel',j===i&&!QS.done));
+  if(!noFocus&&btns[i]){btns[i].focus({preventScroll:true}); if(scroll) btns[i].scrollIntoView({block:'nearest'});}
+}
+function moveSel(d){
+  if(cur&&cur.t==='choose'){
+    const btns=[...ov.querySelectorAll('.choice')], k=btns.indexOf(document.activeElement);
+    const j=k<0?0:(k+d+btns.length)%btns.length; btns[j].focus({preventScroll:true}); sfx.blip(); return;
+  }
+  if(!QS||QS.done) return;
+  const n=QS.q.o.length; let j=QS.sel;
+  for(let k=0;k<n;k++){j=(j+d+n)%n; if(!QS.tried.has(j)) break;}
+  setSel(j,false,true); sfx.blip();
+}
+function choose(i){
+  if(!QS||QS.done||QS.tried.has(i)) return;
+  const q=QS.q, btns=[...ov.querySelectorAll('.opt')], fb=ov.querySelector('.fb');
+  if(i===q.a){
+    QS.done=true;
+    btns.forEach(b=>{b.classList.remove('sel');b.setAttribute('aria-disabled','true');});
+    btns[i].classList.add('right');
+    let earn=0,bonus=0;
+    if(!(q.uid in S.results)){
+      S.results[q.uid]=QS.first; earn=QS.first?2:1;
+      if(QS.first){S.streak++; if(S.streak%3===0) bonus=1;} else S.streak=0;
+      S.pearls+=earn+bonus;
+    }
+    fb.className='fb ok'; fb.innerHTML=`<b>${QS.first?'★ First try!':'✓ Got it!'}</b> ${q.o[i][1]}${earn?`<span class="earn">+${earn} <i class="pearl"></i>${bonus?` STREAK x${S.streak}! +1 bonus <i class="pearl"></i>`:''}</span>`:''}`;
+    sfx.right(); if(earn) popPearls(earn+bonus,bonus);
+    if(q.fx){S.graph[q.fx]=true; const g=ov.querySelector('canvas.graph'); if(g) drawGraph(g);}
+    updateHud();
+    if(earn){const pc=hud.querySelector('.pearls'); if(pc) pc.classList.add('bump');}
+    const c=ov.querySelector('.cont'); c.hidden=false; c.focus({preventScroll:true}); c.scrollIntoView({block:'nearest'});
+  } else {
+    QS.first=false; QS.tried.add(i);
+    btns[i].classList.add('wrong'); btns[i].classList.remove('sel'); btns[i].setAttribute('aria-disabled','true');
+    fb.className='fb no'; fb.innerHTML=`<b>✗ Not quite.</b> ${q.o[i][1]}`;
+    sfx.wrong();
+    let j=i; for(let k=1;k<=btns.length;k++){const t=(i+k)%btns.length; if(!QS.tried.has(t)){j=t;break;}}
+    setSel(j,false,false);
+    fb.scrollIntoView({block:'nearest'});
+  }
+}
+function showPanel(p){
+  ov.className='ov show';
+  const body=typeof p.html==='function'?p.html():p.html;
+  ov.innerHTML=`<div class="panel" role="dialog" aria-label="${p.tag}"><div class="ptag"><span class="sk">${p.tag}</span></div>
+    ${p.graph?'<canvas class="graph" width="176" height="142" aria-label="Your completed graph"></canvas>':''}
+    ${body}<div class="btnrow">${p.buttons||'<button class="cont">CONTINUE ▶</button>'}</div></div>`;
+  const g=ov.querySelector('canvas.graph'); if(g) drawGraph(g);
+  ov.querySelectorAll('canvas[data-badge]').forEach(cv2=>drawBadge(cv2,cv2.dataset.badge));
+  ov.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.act==='again') reset();}));
+  const c=ov.querySelector('.cont'); if(c){c.addEventListener('click',()=>next()); c.focus({preventScroll:true});}
+}
+function showCut(){
+  ov.className='ov show';
+  ov.innerHTML='<div class="banner" role="status"><span class="b1">TRIAL 1</span><span class="b2">DAY 1</span></div>';
+  S.cut={t0:performance.now(),D:4500,day:1,trial:1,b1:ov.querySelector('.b1'),b2:ov.querySelector('.b2'),gen:S.gen};
+}
+function tickCut(){
+  const c=S.cut; if(!c) return;
+  const p=(performance.now()-c.t0)/c.D, days=I().days;
+  if(p>=1){
+    S.growth=1; c.b1.textContent='3 TRIALS'; c.b2.textContent='DONE!'; S.cut=null; sfx.done();
+    setTimeout(()=>{if(c.gen===S.gen&&cur&&cur.t==='cut') next();},1100);
+    return;
+  }
+  const trial=Math.min(3,Math.floor(p*3)+1), tp=(p*3)%1, day=1+Math.floor((days-1)*tp+0.0001);
+  S.growth=tp;
+  if(day!==c.day||trial!==c.trial){c.day=day;c.trial=trial;c.b1.textContent='TRIAL '+trial;c.b2.textContent='DAY '+day;tone(330+day*18,0.03,0.012);}
+}
+
+/* ---------- actions ---------- */
+function interact(){
+  const n=nearby(); if(!n) return;
+  sfx.sel();
+  if(n==='SPROUT'){
+    if(S.stage>=4) run([SAY(`Here’s your Lab Report!`),reportPanel()]);
+    else run([SAY(hintText())]);
+    return;
+  }
+  if(n==='PROP'){ run([SAY(I().propText[S.stage===0?0:1])]); return; }
+  const i=ORDER.indexOf(n);
+  if(i<S.stage) run([SAY(`You already finished the ${I().names[n]}. Nice work!`)]);
+  else if(i>S.stage) run([SAY(`Not yet! This station needs results from earlier steps. ${hintText()}`)]);
+  else {S.spStart=S.pearls; run(scriptFor(n));}
+}
+function pressA(){
+  unlockAudio();
+  if(S.mode==='title'){startGame();return;}
+  if(S.mode==='walk'){interact();return;}
+  if(!cur) return;
+  if(cur.t==='say'){
+    if(typing&&typing.i<typing.full.length) finishTyping(); else {sfx.sel(); next();}
+  } else if(cur.t==='q'){
+    if(QS&&QS.done) next(); else if(QS) choose(QS.sel);
+  } else if(cur.t==='choose'){
+    const ae=document.activeElement; if(ae&&ae.classList.contains('choice')) ae.click(); else {const b=ov.querySelector('.choice'); if(b) b.click();}
+  } else if(cur.t==='panel'||cur.t==='badge'||cur.t==='trophy'){ next(); }
+}
+function pressB(){
+  unlockAudio();
+  if(S.mode==='title'){startGame();return;}
+  if(S.mode==='walk'){run([SAY(hintText())]);return;}
+  if(cur&&cur.t==='say') pressA();
+}
+function pressStart(){
+  unlockAudio();
+  if(S.mode==='title'){startGame();return;}
+  if(S.mode==='walk') run([SAY(`Controls: arrow keys, WASD, or the D-pad to walk. A (Space or Enter) to talk and choose. B (X) for a hint.`)]);
+}
+function startGame(){
+  document.getElementById('title').classList.add('hide');
+  sfx.start(); S.mode='walk'; updateHud(); run(INTRO);
+}
+function reset(){
+  S.gen++; queue=[]; cur=null; QS=null; onDone=null; S.cut=null; closeOv();
+  Object.assign(S,{mode:'title',px:72,py:66,walkT:0,moving:false,stage:0,growth:0,results:{},pearls:0,streak:0,spStart:0});
+  S.graph={axes:false,x:false,y:false,scale:false,trend:false,title:false};
+  held.up=held.down=held.left=held.right=false;
+  document.getElementById('title').classList.remove('hide');
+  updateHud();
+}
+const hud=document.getElementById('hud');
+function updateHud(){
+  hud.innerHTML=ORDER.map((id,i)=>{
+    const st=S.mode==='title'?'':i<S.stage?'done':i===S.stage?'now':'';
+    return `<span class="chip ${st}">${id}${i<S.stage?' ✓':''}</span>`;}).join('')+`<span class="chip pearls" title="Pearls"><i class="pearl"></i>${S.pearls}</span>`;
+}
+
+/* ---------- input ---------- */
+const KEYDIR={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',W:'up',s:'down',S:'down',a:'left',A:'left',d:'right',D:'right'};
+addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  const dir=KEYDIR[e.key];
+  if(dir){
+    if(S.mode==='walk'){e.preventDefault();held[dir]=true;}
+    else if(cur&&(cur.t==='q'||cur.t==='choose')){e.preventDefault(); moveSel(dir==='up'||dir==='left'?-1:1);}
+    return;
+  }
+  const k=e.key;
+  if(k===' '||k==='Enter'||k==='z'||k==='Z'){
+    const ae=document.activeElement;
+    if((k===' '||k==='Enter')&&ae&&(ae.tagName==='BUTTON'||ae.tagName==='SUMMARY')&&ov.contains(ae)) return;
+    e.preventDefault(); if(!e.repeat) pressA(); return;
+  }
+  if(k==='x'||k==='X'||k==='b'||k==='B'){e.preventDefault(); if(!e.repeat) pressB();}
+});
+addEventListener('keyup',e=>{const dir=KEYDIR[e.key]; if(dir) held[dir]=false;});
+addEventListener('blur',()=>{held.up=held.down=held.left=held.right=false;});
+
+document.querySelectorAll('[data-dir]').forEach(b=>{
+  const d=b.dataset.dir;
+  b.addEventListener('mousedown',e=>e.preventDefault());
+  b.addEventListener('pointerdown',e=>{
+    e.preventDefault(); unlockAudio(); b.classList.add('on');
+    if(S.mode==='walk') held[d]=true;
+    else if(cur&&(cur.t==='q'||cur.t==='choose')) moveSel(d==='up'||d==='left'?-1:1);
+  });
+  const off=()=>{b.classList.remove('on'); held[d]=false;};
+  ['pointerup','pointerleave','pointercancel'].forEach(t=>b.addEventListener(t,off));
+});
+document.querySelectorAll('[data-btn]').forEach(b=>{
+  b.addEventListener('mousedown',e=>e.preventDefault());
+  b.addEventListener('pointerdown',e=>{
+    e.preventDefault(); b.classList.add('on');
+    const w=b.dataset.btn;
+    if(w==='A') pressA(); else if(w==='B') pressB(); else if(w==='START') pressStart();
+    else if(w==='SOUND'){unlockAudio(); S.sound=!S.sound; document.getElementById('sndlbl').textContent=S.sound?'SOUND ON':'SOUND OFF'; if(S.sound) sfx.sel();}
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(t=>b.addEventListener(t,()=>b.classList.remove('on')));
+});
+document.getElementById('title').addEventListener('click',()=>pressA());
+
+/* ---------- loop ---------- */
+let last=0;
+function loop(ts){
+  const dt=Math.min(50,ts-(last||ts)); last=ts; S.t+=dt;
+  if(S.mode==='walk'){
+    let dx=(held.right?1:0)-(held.left?1:0), dy=(held.down?1:0)-(held.up?1:0);
+    if(dx&&dy){dx*=0.7071;dy*=0.7071;}
+    S.moving=!!(dx||dy);
+    const sp=0.058*dt;
+    if(dx) tryMove(dx*sp,0);
+    if(dy) tryMove(0,dy*sp);
+    if(S.moving) S.walkT+=dt;
+  } else S.moving=false;
+  if(typing&&typing.i<typing.full.length){
+    typing.acc+=dt; let added=0;
+    while(typing.acc>=18&&typing.i<typing.full.length){typing.acc-=18;typing.i++;added++;}
+    if(added){typing.el.textContent=typing.full.slice(0,typing.i); if(typing.i%3<added) sfx.blip(); if(typing.i>=typing.full.length) finishTyping();}
+  }
+  tickCut();
+  render();
+  requestAnimationFrame(loop);
+}
+updateHud();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
